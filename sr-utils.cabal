@@ -53,6 +53,7 @@ Library
     mmorph,
     mtl,
     pretty,
+    process,
     QuickCheck,
     safecopy,
     syb,
@@ -63,6 +64,7 @@ Library
     th-orphans,
     time,
     unexceptionalio-trans,
+    unix,
     userid,
     uuid,
     uuid-orphans
@@ -71,7 +73,10 @@ Library
   Default-Extensions: ScopedTypeVariables, StandaloneDeriving, TupleSections, TypeApplications, TypeFamilies
   Exposed-modules:
     Extra.Except
+    Extra.Everywhere
+    Extra.GenericMap
     Extra.Generics
+    Extra.HughesPJ
     Extra.IO
     Extra.LocalStorageEncode
     Extra.Monad.Supply
@@ -79,6 +84,8 @@ Library
     Extra.Orphans2
     Extra.QuickCheck
     Extra.Serialize
+    Extra.SSH
+    Extra.Terminal
     Extra.Text
     Extra.Time
     Extra.URI
