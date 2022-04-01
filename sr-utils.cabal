@@ -68,6 +68,9 @@ Library
     userid,
     uuid,
     uuid-orphans
+  C-Sources:         cbits/gwinsz.c
+  Include-Dirs:        cbits
+  Install-Includes:    gwinsz.h
   Default-Extensions: ConstraintKinds, CPP, DataKinds, DeriveDataTypeable, DeriveFunctor, DeriveGeneric
   Default-Extensions: FlexibleInstances, FlexibleContexts, MultiParamTypeClasses, RankNTypes
   Default-Extensions: ScopedTypeVariables, StandaloneDeriving, TupleSections, TypeApplications, TypeFamilies
