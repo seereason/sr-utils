@@ -13,7 +13,9 @@ import Data.SafeCopy (base, SafeCopy(..))
 import Data.Serialize (Serialize)
 import Data.Time
 import Extra.Orphans ()
-import GHC.Generics
+import GHC.Generics (Generic)
+import GHC.Read (expectP, readField)
+import Text.Read (Lexeme(Ident, Punc), prec, parens, Read(..), readListDefault, readListPrecDefault, reset, step)
 #if !__GHCJS__
 import Test.QuickCheck
 #endif
@@ -74,6 +76,15 @@ myTimeDiffToString diff =
 newtype Zulu = Zulu {_utcTime :: UTCTime} deriving (Eq, Ord, Data, Generic)
 deriving instance Serialize Zulu
 
+instance Read Zulu where
+  readPrec =
+    parens (prec 11
+             (do expectP (Ident "Zulu")
+                 a <- step readPrec
+                 return (Zulu (read a :: UTCTime))))
+  -- readList = readListDefault
+  -- readListPrec = readListPrecDefault
+
 $(makeLenses ''Zulu)
 instance SafeCopy Zulu where version = 1; kind = base
 
@@ -84,7 +95,7 @@ instance Arbitrary Zulu where arbitrary = Zulu <$> arbitrary
 -- instance FormatTime Zulu
 
 instance Show Zulu where
-  showsPrec d (Zulu t) = showParen (d > 10) $ showString ("Zulu (read " ++ show (show t) ++ ")")
+  showsPrec d (Zulu t) = showParen (d > 10) $ showString ("Zulu " ++ show (show t))
 
 prettyUTCTime :: TimeZone -> UTCTime -> String
 prettyUTCTime = (\tz -> fmt . (utcToLocalTime tz))
