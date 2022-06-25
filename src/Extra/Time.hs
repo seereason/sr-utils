@@ -1,4 +1,4 @@
-{-# LANGUAGE CPP, DeriveAnyClass, DeriveDataTypeable, DeriveGeneric, StandaloneDeriving, TemplateHaskell #-}
+{-# LANGUAGE CPP, DeriveAnyClass, DeriveDataTypeable, DeriveGeneric, DeriveLift, StandaloneDeriving, TemplateHaskell, UndecidableInstances #-}
 module Extra.Time
     ( formatDebianDate
     -- , myTimeDiffToString
@@ -15,6 +15,8 @@ import Data.Time
 import Extra.Orphans ()
 import GHC.Generics (Generic)
 import GHC.Read (expectP, readField)
+import Language.Haskell.TH (Exp(..), mkName)
+import Language.Haskell.TH.Lift as Q (Lift(..))
 import Text.Read (Lexeme(Ident, Punc), prec, parens, Read(..), readListDefault, readListPrecDefault, reset, step)
 #if !__GHCJS__
 import Test.QuickCheck
@@ -73,8 +75,37 @@ myTimeDiffToString diff =
 
 -- | A version of UTCTime with a Show instance that returns a Haskell
 -- expression.
-newtype Zulu = Zulu {_utcTime :: UTCTime} deriving (Eq, Ord, Data, Generic)
+newtype Zulu = Zulu {_utcTime :: UTCTime} deriving (Eq, Ord, Data, Generic, Lift)
 deriving instance Serialize Zulu
+
+-- These Lift instances are copied from the time-qq package.  It would
+-- be better to use the package.
+instance Q.Lift UTCTime where
+    lift (UTCTime day diff) = do
+        day' <- Q.lift day
+        diff' <- Q.lift diff
+        return $ ConE (mkName "UTCTime") `AppE` day' `AppE` diff'
+#if MIN_VERSION_template_haskell(2,17,0)
+    liftTyped = TH.unsafeCodeCoerce . TH.lift
+#elif MIN_VERSION_template_haskell(2,16,0)
+    liftTyped = TH.unsafeTExpCoerce . TH.lift
+#endif
+
+instance Q.Lift DiffTime where
+    lift x = [| toEnum $(Q.lift $ fromEnum x) |]
+#if MIN_VERSION_template_haskell(2,17,0)
+    liftTyped = TH.unsafeCodeCoerce . TH.lift
+#elif MIN_VERSION_template_haskell(2,16,0)
+    liftTyped = TH.unsafeTExpCoerce . TH.lift
+#endif
+
+instance Q.Lift Day where
+    lift x = [| toEnum $(Q.lift $ fromEnum x) |]
+#if MIN_VERSION_template_haskell(2,17,0)
+    liftTyped = TH.unsafeCodeCoerce . TH.lift
+#elif MIN_VERSION_template_haskell(2,16,0)
+    liftTyped = TH.unsafeTExpCoerce . TH.lift
+#endif
 
 instance Read Zulu where
   readPrec =
