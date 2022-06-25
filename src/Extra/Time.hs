@@ -80,7 +80,35 @@ newtype Zulu = Zulu {_utcTime :: UTCTime} deriving (Eq, Ord, Data, Generic, Lift
 deriving instance Serialize Zulu
 
 -- These Lift instances are copied from the time-qq package.  It would
--- be better to use the package.
+-- be better to use the package.  That being said, it looks like they
+-- might be unsafe, particularly for ghcjs, as the Enum class uses Int
+-- which is only 56 bits in ghcjs which is sufficient to represent the
+-- number of picoseconds in a day (0x132f4579c980000, which has 57
+-- bits.)  Use the lift instance for Zulu instead.
+--
+-- Test:
+--
+-- {-# LANGUAGE TypeApplications #-}
+-- import Data.Time
+-- main :: IO ()
+-- main = do
+--   putStrLn ("maxbound=" <> show (maxBound :: Int))
+--   mapM_ test
+--     ["2022-06-25 00:00:00.00001 UTC",
+--      "2022-06-25 00:00:00.0001 UTC",
+--      "2022-06-25 00:00:00.001 UTC",
+--      "2022-06-25 00:00:00.002 UTC",
+--      "2022-06-25 00:00:00.003 UTC",
+--      "2022-06-25 00:00:27.581804038 UTC",
+--      "2022-06-25 12:59:27.581804038 UTC",
+--      "2022-06-25 23:59:27.581804038 UTC"]
+--     where
+--       test :: String -> IO ()
+--       test s = do
+--         putStrLn ("expected: " <> show (utctDayTime (read s :: UTCTime)))
+--         putStrLn ("  actual: " <> show (toEnum @DiffTime $ fromEnum $ utctDayTime (read s :: UTCTime)))
+
+#if !__GHCJS__
 instance Q.Lift UTCTime where
     lift (UTCTime day diff) = do
         day' <- Q.lift day
@@ -106,6 +134,19 @@ instance Q.Lift Day where
     liftTyped = TH.unsafeCodeCoerce . TH.lift
 #elif MIN_VERSION_template_haskell(2,16,0)
     liftTyped = TH.unsafeTExpCoerce . TH.lift
+#endif
+#else
+
+-- $ ghci
+-- Prelude> :load src/Extra/Time.hs
+-- [1 of 1] Compiling Extra.Time       ( src/Extra/Time.hs, interpreted )
+-- *> :m +Language.Haskell.TH.Lift
+-- *> :set -XTemplateHaskell
+-- *> $(lift (read "2022-06-25 23:59:27.581804038 UTC" :: UTCTime))
+-- 2022-06-25 23:59:27.581804038 UTC
+
+instance Q.Lift UTCTime where
+  lift t = [|read $(Q.lift (show t))|]
 #endif
 
 instance Read Zulu where
