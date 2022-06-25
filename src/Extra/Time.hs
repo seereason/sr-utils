@@ -11,6 +11,7 @@ import Control.Lens (makeLenses)
 import Data.Data (Data)
 import Data.SafeCopy (base, SafeCopy(..))
 import Data.Serialize (Serialize)
+import Data.String
 import Data.Time
 import Extra.Orphans ()
 import GHC.Generics (Generic)
@@ -115,6 +116,9 @@ instance Read Zulu where
                  return (Zulu (read a :: UTCTime))))
   -- readList = readListDefault
   -- readListPrec = readListPrecDefault
+
+instance IsString Zulu where
+  fromString s = Zulu (read s :: UTCTime)
 
 $(makeLenses ''Zulu)
 instance SafeCopy Zulu where version = 1; kind = base
