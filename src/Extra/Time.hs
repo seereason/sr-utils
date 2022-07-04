@@ -115,25 +115,25 @@ instance Q.Lift UTCTime where
         diff' <- Q.lift diff
         return $ ConE (mkName "UTCTime") `AppE` day' `AppE` diff'
 #if MIN_VERSION_template_haskell(2,17,0)
-    liftTyped = TH.unsafeCodeCoerce . TH.lift
+    liftTyped = Q.unsafeCodeCoerce . Q.lift
 #elif MIN_VERSION_template_haskell(2,16,0)
-    liftTyped = TH.unsafeTExpCoerce . TH.lift
+    liftTyped = Q.unsafeTExpCoerce . Q.lift
 #endif
 
 instance Q.Lift DiffTime where
     lift x = [| toEnum $(Q.lift $ fromEnum x) |]
 #if MIN_VERSION_template_haskell(2,17,0)
-    liftTyped = TH.unsafeCodeCoerce . TH.lift
+    liftTyped = Q.unsafeCodeCoerce . Q.lift
 #elif MIN_VERSION_template_haskell(2,16,0)
-    liftTyped = TH.unsafeTExpCoerce . TH.lift
+    liftTyped = Q.unsafeTExpCoerce . Q.lift
 #endif
 
 instance Q.Lift Day where
     lift x = [| toEnum $(Q.lift $ fromEnum x) |]
 #if MIN_VERSION_template_haskell(2,17,0)
-    liftTyped = TH.unsafeCodeCoerce . TH.lift
+    liftTyped = Q.unsafeCodeCoerce . Q.lift
 #elif MIN_VERSION_template_haskell(2,16,0)
-    liftTyped = TH.unsafeTExpCoerce . TH.lift
+    liftTyped = Q.unsafeTExpCoerce . Q.lift
 #endif
 #else
 
