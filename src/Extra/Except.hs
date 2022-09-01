@@ -38,10 +38,10 @@ module Extra.Except
 import Control.Applicative
 import Control.Exception hiding (catch) -- ({-evaluate,-} Exception, IOException, SomeException(..))
 import Control.Lens (Prism', review)
+import Control.Monad (MonadPlus(mplus, mzero))
 import Control.Monad.Catch
-import Control.Monad.Except
+import Control.Monad.Except (catchError, ExceptT, liftEither, MonadError, runExceptT, throwError, withExceptT)
 import Control.Monad.Trans (MonadTrans(lift), liftIO)
-import Control.Monad.Except (ExceptT, runExceptT)
 import Data.Monoid ((<>))
 import Data.Serialize
 import Data.Typeable (typeOf)
