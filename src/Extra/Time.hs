@@ -34,8 +34,9 @@ import Test.QuickCheck
  -}
 
 
+formatDebianDate :: FormatTime t => t -> String
 formatDebianDate t =
-    prefix ++ seconds ++ suffix
+    prefix <> seconds <> suffix
         where prefix = formatTime defaultTimeLocale prefixFormat t
               seconds = take 2 $ formatTime defaultTimeLocale secondsFormat t
               suffix = formatTime defaultTimeLocale suffixFormat t
@@ -45,6 +46,7 @@ formatDebianDate t =
               format = "%a, %d %b %Y %H:%M:%S %Z"
               _test = assert (format == prefixFormat ++ secondsFormat ++ suffixFormat)
 
+_test :: IO Bool
 _test=
     do tz <- getCurrentTimeZone
        let ut = localTimeToUTC tz testtime

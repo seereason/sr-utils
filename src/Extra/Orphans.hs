@@ -28,8 +28,9 @@ import Data.UUID.V4 as UUID (nextRandom)
 import Data.UUID.Orphans ({-instance SafeCopy UUID-})
 import Extra.Orphans2 ()
 import GHC.Generics (Generic)
+import GHC.Stack.Types
 import Instances.TH.Lift ()
-import Language.Haskell.TH (Dec, Loc(..), Ppr(ppr), TypeQ, Q)
+import Language.Haskell.TH (Loc(..), Ppr(ppr))
 import Language.Haskell.TH.Lift -- (deriveLift, deriveLiftMany)
 import Language.Haskell.TH.PprLib (ptext)
 import Network.URI (URI(..), URIAuth(..), uriToString)
@@ -165,3 +166,16 @@ instance Serialize UUID where
 deriving instance Serialize Loc
 deriving instance Serialize URI
 deriving instance Serialize URIAuth
+
+deriving instance Generic CallStack
+deriving instance Eq CallStack
+deriving instance Ord CallStack
+deriving instance Serialize CallStack
+deriving instance SafeCopy CallStack
+
+#if !MIN_VERSION_base(4,15,0)
+deriving instance Generic SrcLoc
+#endif
+deriving instance Ord SrcLoc
+deriving instance Serialize SrcLoc
+deriving instance SafeCopy SrcLoc
