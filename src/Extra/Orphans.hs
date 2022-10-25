@@ -1,6 +1,7 @@
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# OPTIONS -Wno-orphans #-}
@@ -36,6 +37,7 @@ import Language.Haskell.TH.PprLib (ptext)
 import Network.URI (URI(..), URIAuth(..), uriToString)
 import System.IO.Unsafe (unsafePerformIO)
 import Test.QuickCheck (Arbitrary(arbitrary), choose, elements, Gen, listOf, listOf1, resize)
+import Text.PrettyPrint.HughesPJClass ( Pretty(pPrint), text )
 
 instance Typeable t => SafeCopy (Proxy t) where
       putCopy Proxy = contain (do { return () })
@@ -179,3 +181,6 @@ deriving instance Generic SrcLoc
 deriving instance Ord SrcLoc
 deriving instance Serialize SrcLoc
 deriving instance SafeCopy SrcLoc
+deriving instance Typeable SrcLoc
+instance Pretty SrcLoc where
+  pPrint SrcLoc{..} = text (srcLocModule <> ":" <> Prelude.show srcLocStartLine)

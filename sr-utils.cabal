@@ -1,5 +1,5 @@
 Name:           sr-utils
-Version:        1.96.1
+Version:        1.97
 License:        BSD3
 License-File:   COPYING
 Author:         David Fox
@@ -46,6 +46,7 @@ Library
     filemanip,
     filepath,
     generic-data,
+    generic-lens,
     hslogger,
     HUnit,
     lens,
@@ -81,6 +82,7 @@ Library
     Extra.Generics
     Extra.HughesPJ
     Extra.IO
+    Extra.Lens
     Extra.LocalStorageEncode
     Extra.Monad.Supply
     Extra.Orphans
