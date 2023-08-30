@@ -1,4 +1,12 @@
-module Extra.Debug (Temp(Tmp, unTmp)) where
+{-# LANGUAGE InstanceSigs #-}
+
+module Extra.Debug
+  ( Temp(Tmp, unTmp)
+  , TempT(TmpT, unTmpT)
+  ) where
+
+import Control.Monad.Trans
+import GHC.Generics
 
 -- | A newtype wrapper for propagating changes through the codebase.
 -- Add this to an argument that needs to change and the caller will
@@ -30,3 +38,25 @@ instance Functor Temp where
 
 deriving instance Generic (Temp a)
 #endif
+
+-- Monad transformer version of Temp.  With instances.
+newtype TempT m a = TmpT {unTmpT :: m a}
+
+deriving instance Generic (TempT m a)
+
+instance Functor m => Functor (TempT m) where
+  fmap :: (a -> b) -> TempT m a -> TempT m b
+  fmap f a = TmpT $ fmap f $ unTmpT a
+
+instance Applicative m => Applicative (TempT m) where
+  pure = TmpT . pure
+  (<*>) :: TempT m (a -> b) -> TempT m a -> TempT m b
+  f <*> a = TmpT $ (unTmpT f) <*> (unTmpT a)
+
+instance Monad m => Monad (TempT m) where
+  (>>=) :: TempT m a -> (a -> TempT m b) -> TempT m b
+  a >>= f = TmpT ((unTmpT a) >>= (unTmpT . f))
+
+instance MonadTrans TempT where
+  lift :: Monad m => m a -> TempT m a
+  lift m = TmpT m
