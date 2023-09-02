@@ -2,10 +2,13 @@
 
 module Extra.Debug
   ( Temp(Tmp, unTmp)
-  , TempT(TmpT, unTmpT)
+  , TempT, liftTmpT, unTmpT, runTmpT
   ) where
 
 import Control.Monad.Trans
+import Control.Monad.RWS
+import Data.Map (Map)
+import Data.Text (Text)
 import GHC.Generics
 
 -- | A newtype wrapper for propagating changes through the codebase.
@@ -40,6 +43,19 @@ deriving instance Generic (Temp a)
 #endif
 
 -- Monad transformer version of Temp.  With instances.
+#if 1
+type TempT m = RWST () [Text] (Map Text Text) m
+
+unTmpT :: Monad m => TempT m a -> m a
+unTmpT m = fst <$> evalRWST m () mempty
+
+runTmpT :: Monad m => TempT m a -> m (a, Map Text Text, [Text])
+runTmpT m = runRWST m () mempty
+
+liftTmpT :: Monad m => m a -> TempT m a
+liftTmpT = lift
+
+#else
 newtype TempT m a = TmpT {unTmpT :: m a}
 
 deriving instance Generic (TempT m a)
@@ -60,3 +76,4 @@ instance Monad m => Monad (TempT m) where
 instance MonadTrans TempT where
   lift :: Monad m => m a -> TempT m a
   lift m = TmpT m
+#endif
