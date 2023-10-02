@@ -43,18 +43,19 @@ deriving instance Generic (Temp a)
 #endif
 
 -- Monad transformer version of Temp.  With instances.
-newtype TempT m a = TmpT (RWST () [Text] (Map Text Text) m a)
+-- newtype TempT m a = TmpT (RWST () [Text] (Map Text Text) m a)
+newtype TempT m a = TmpT (m a)
 
 deriving instance Generic (TempT m a)
 
 unTmpT :: Monad m => TempT m a -> m a
-unTmpT (TmpT m) = fst <$> evalRWST m () mempty
+unTmpT (TmpT m) = m
 
-runTmpT :: TempT m a -> m (a, Map Text Text, [Text])
-runTmpT (TmpT m) = runRWST m () mempty
+runTmpT :: TempT m a -> m a
+runTmpT (TmpT m) = m
 
 liftTmpT :: Monad m => m a -> TempT m a
-liftTmpT = TmpT . lift
+liftTmpT = TmpT
 
 instance Functor m => Functor (TempT m) where
   fmap :: (a -> b) -> TempT m a -> TempT m b
@@ -67,11 +68,13 @@ instance (Monad m, Applicative m) => Applicative (TempT m) where
 
 instance Monad m => Monad (TempT m) where
   (>>=) :: TempT m a -> (a -> TempT m b) -> TempT m b
-  TmpT a >>= f = TmpT (a >>= lift .unTmpT . f)
-
-instance MonadTrans TempT where
-  lift :: Monad m => m a -> TempT m a
-  lift m = TmpT (lift m)
+  TmpT a >>= f = TmpT (a >>= unTmpT . f)
 
 instance MonadIO m => MonadIO (TempT m) where
   liftIO io = liftTmpT (liftIO io)
+
+#if 0
+instance MonadTrans TempT where
+  lift :: Monad m => m a -> TempT m a
+  lift m = TmpT (lift m)
+#endif
