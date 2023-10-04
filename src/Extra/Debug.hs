@@ -5,11 +5,11 @@ module Extra.Debug
   , TempT, liftTmpT, unTmpT, runTmpT
   ) where
 
+import Control.Monad.Catch
 import Control.Monad.Trans
-import Control.Monad.RWS
-import Data.Map (Map)
-import Data.Text (Text)
 import GHC.Generics
+import GHC.Stack (HasCallStack, callStack)
+import SeeReason.Log (alogDrop, Priority(DEBUG))
 
 -- | A newtype wrapper for propagating changes through the codebase.
 -- Add this to an argument that needs to change and the caller will
@@ -48,30 +48,44 @@ newtype TempT m a = TmpT (m a)
 
 deriving instance Generic (TempT m a)
 
-unTmpT :: Monad m => TempT m a -> m a
-unTmpT (TmpT m) = m
+-- | Log and rethrow any exception.
+unTmpT :: (MonadCatch m, MonadIO m, HasCallStack) => TempT m a -> m a
+unTmpT m =
+  runTmpT (\(e :: SomeException) -> alogDrop id DEBUG (show e) >> throwM e) m
 
-runTmpT :: TempT m a -> m a
-runTmpT (TmpT m) = m
+-- | Pass any exception to f.
+runTmpT ::
+  forall m a. (MonadCatch m, HasCallStack)
+  => (SomeException -> m a)
+  -> TempT m a
+  -> m a
+runTmpT f (TmpT m) =
+  m `catch` f
 
-liftTmpT :: Monad m => m a -> TempT m a
+liftTmpT :: HasCallStack => m a -> TempT m a
 liftTmpT = TmpT
 
 instance Functor m => Functor (TempT m) where
-  fmap :: (a -> b) -> TempT m a -> TempT m b
+  fmap :: HasCallStack => (a -> b) -> TempT m a -> TempT m b
   fmap f (TmpT m) = TmpT $ fmap f m
 
 instance (Monad m, Applicative m) => Applicative (TempT m) where
   pure = TmpT . pure
-  (<*>) :: TempT m (a -> b) -> TempT m a -> TempT m b
+  (<*>) :: HasCallStack => TempT m (a -> b) -> TempT m a -> TempT m b
   (TmpT f) <*> (TmpT m) = TmpT $ f <*> m
 
-instance Monad m => Monad (TempT m) where
-  (>>=) :: TempT m a -> (a -> TempT m b) -> TempT m b
+instance (MonadCatch m, MonadIO m) => Monad (TempT m) where
+  (>>=) :: HasCallStack => TempT m a -> (a -> TempT m b) -> TempT m b
   TmpT a >>= f = TmpT (a >>= unTmpT . f)
 
-instance MonadIO m => MonadIO (TempT m) where
+instance (MonadCatch m, MonadIO m) => MonadIO (TempT m) where
   liftIO io = liftTmpT (liftIO io)
+
+instance (MonadCatch m, MonadIO m) => MonadCatch (TempT m) where
+  catch (TmpT m) f = liftTmpT (catch m (unTmpT . f))
+
+instance (MonadCatch m, MonadThrow m, MonadIO m) => MonadThrow (TempT m) where
+  throwM = liftTmpT . throwM
 
 #if 0
 instance MonadTrans TempT where

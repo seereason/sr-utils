@@ -1,5 +1,5 @@
 Name:           sr-utils
-Version:        1.99
+Version:        1.100
 License:        BSD3
 License-File:   COPYING
 Author:         David Fox
@@ -57,6 +57,7 @@ Library
     process,
     QuickCheck,
     safecopy,
+    sr-log,
     syb,
     template-haskell,
     text,
