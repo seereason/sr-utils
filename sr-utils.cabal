@@ -78,8 +78,9 @@ Library
   Default-Extensions: ScopedTypeVariables, StandaloneDeriving, TupleSections, TypeApplications, TypeFamilies
   Exposed-modules:
     Extra.Debug
-    Extra.Except
     Extra.Everywhere
+    Extra.Except
+    Extra.Exceptionless
     Extra.GenericMap
     Extra.Generics
     Extra.HughesPJ
