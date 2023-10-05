@@ -6,10 +6,12 @@ module Extra.Exceptionless
   , unExceptionless
   , runExceptionless
   , mapExceptionless
+  , tryExceptionless
   , catchExceptionless
+  , handleExceptionless
   ) where
 
-import Control.Monad.Catch (Exception, MonadCatch(catch), MonadThrow(throwM), SomeException)
+import Control.Monad.Catch (Exception, MonadCatch(catch), MonadThrow(throwM), SomeException, try)
 import Control.Monad.Except (MonadError(catchError, throwError))
 import Control.Monad.Reader (MonadReader(ask, local))
 import Control.Monad.State as State (MonadState(get, put))
@@ -45,12 +47,18 @@ liftExceptionless :: HasCallStack => m a -> Exceptionless m a
 liftExceptionless = Exceptionless
 
 -- | modify a Exceptionless computation without catching exceptions.
-mapExceptionless :: (m a -> m a) -> Exceptionless m a -> Exceptionless m a
+mapExceptionless :: (m a -> m b) -> Exceptionless m a -> Exceptionless m b
 mapExceptionless f (Exceptionless m) = Exceptionless (f m)
 
+tryExceptionless :: (MonadCatch m, Exception e) => Exceptionless m a -> Exceptionless m (Either e a)
+tryExceptionless m = mapExceptionless try m
+
 -- | Catch a specific exception in the Exceptionless monad.
-catchExceptionless :: (MonadCatch m, Exception e) => Exceptionless m a -> (e -> m a) -> Exceptionless m a
-catchExceptionless m f = Exceptionless (unwrap m `catch` f)
+catchExceptionless :: (MonadCatch m, MonadIO m, Exception e) => Exceptionless m a -> (e -> m a) -> Exceptionless m a
+catchExceptionless m f = tryExceptionless m >>= lift . either f pure
+
+handleExceptionless :: (MonadCatch m, MonadIO m, Exception e) => (e -> m a) -> Exceptionless m a -> Exceptionless m a
+handleExceptionless = flip catchExceptionless
 
 instance Functor m => Functor (Exceptionless m) where
   fmap :: HasCallStack => (a -> b) -> Exceptionless m a -> Exceptionless m b
