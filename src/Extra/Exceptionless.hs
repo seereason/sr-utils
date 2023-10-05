@@ -1,5 +1,5 @@
 {-# LANGUAGE CPP, DeriveGeneric, FlexibleInstances, InstanceSigs, MultiParamTypeClasses, RankNTypes, ScopedTypeVariables, StandaloneDeriving, UndecidableInstances #-}
-{-# OPTIONS -Wall #-}
+{-# OPTIONS -Wall -Wno-redundant-constraints #-}
 
 module Extra.Exceptionless
   ( Exceptionless, liftExceptionless
