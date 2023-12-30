@@ -86,6 +86,7 @@ Library
     Extra.HughesPJ
     Extra.IO
     Extra.Lens
+    Extra.LensValue
     Extra.LocalStorageEncode
     Extra.Monad.Supply
     Extra.Orphans
