@@ -27,6 +27,9 @@ module Extra.DynamicG
         fromDyn,
         fromDynamic,
 
+        -- * Applying functions of dynamic type
+        -- dynApply,
+        -- dynApp,
         dynTypeRep,
 
         -- * Convenience re-exports
@@ -61,10 +64,11 @@ import Data.Serialize
   expression will result in an ambiguity error (see 'toDyn').
 -}
 data Dynamic where
-    Dynamic :: forall a. TypeRep a -> Dyn a -> Dynamic
+    Dynamic :: forall a. Constraints a => TypeRep a -> a -> Dynamic
 
 type Constraints a = (Generic a, Typeable a, SafeCopy a, Serialize a, Show a)
 
+{-
 -- | A wrapper GADT that imposes the extra constraints on a.
 data Dyn a where
   Dyn :: Constraints a => a -> Dyn a
@@ -83,10 +87,11 @@ instance Constraints a => Generic (Dyn a) where
 deriving instance Constraints v => Serialize (Dyn v)
 deriving instance Constraints v => SafeCopy (Dyn v)
 deriving instance Constraints v => Typeable (Dyn v)
+-}
 
 -- | @since 2.01
 instance Show Dynamic where
-   showsPrec p (Dynamic t (Dyn v)) =
+   showsPrec p (Dynamic t v) =
           showsPrec p v
           -- showString " :: " .
           -- showsPrec 0 t  .
@@ -105,7 +110,7 @@ instance Exception Dynamic
 -- >    toDyn (id :: Int -> Int)
 --
 toDyn :: Constraints a => a -> Dynamic
-toDyn v = Dynamic typeRep (Dyn v)
+toDyn v = Dynamic typeRep v
 
 -- | Converts a 'Dynamic' object back into an ordinary Haskell value of
 -- the correct type.  See also 'fromDynamic'.
@@ -115,7 +120,7 @@ fromDyn :: Typeable a
         -> a            -- ^ returns: the value of the first argument, if
                         -- it has the correct type, otherwise the value of
                         -- the second argument.
-fromDyn (Dynamic t (Dyn v)) def
+fromDyn (Dynamic t v) def
   | Just HRefl <- t `eqTypeRep` typeOf def = v
   | otherwise                              = def
 
@@ -127,10 +132,28 @@ fromDynamic
         -> Maybe a      -- ^ returns: @'Just' a@, if the dynamically-typed
                         -- object has the correct type (and @a@ is its value),
                         -- or 'Nothing' otherwise.
-fromDynamic (Dynamic t (Dyn v))
+fromDynamic (Dynamic t v)
   | Just HRefl <- t `eqTypeRep` rep = Just v
   | otherwise                       = Nothing
   where rep = typeRep :: TypeRep a
+
+-- (f::(a->b)) `dynApply` (x::a) = (f a)::b
+dynApply :: forall ta tr. (Constraints ta, Constraints tr) => (ta -> tr) -> Dynamic -> Maybe Dynamic
+dynApply f (Dynamic ta' x)
+  | Just HRefl <- typeRep @ta `eqTypeRep` ta'
+  , Just HRefl <- typeRep @Type `eqTypeRep` typeRep @tr
+  = Just (Dynamic (typeRep @tr) (f x))
+dynApply _ _
+  = Nothing
+
+dynApp :: forall ta tr. (Constraints ta, Constraints tr) => (ta -> tr) -> Dynamic -> Dynamic
+dynApp f x = case dynApply f x of
+               Just r -> r
+               Nothing -> errorWithoutStackTrace ("Type error in dynamic application.\n" ++
+                                                  "Can't apply f" ++
+                                                  " :: " ++ show (typeRep @ta) ++
+                                                  " -> " ++ show (typeRep @tr) ++
+                                                  " to argument " ++ show x)
 
 dynTypeRep :: Dynamic -> SomeTypeRep
 dynTypeRep (Dynamic tr _) = SomeTypeRep tr
