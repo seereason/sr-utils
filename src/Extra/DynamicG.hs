@@ -46,7 +46,6 @@ import GHC.Base
 import GHC.Show
 import GHC.Exception
 
-import GHC.Generics
 import Data.SafeCopy
 import Data.Serialize
 
@@ -66,7 +65,7 @@ import Data.Serialize
 data Dynamic where
     Dynamic :: forall a. Constraints a => TypeRep a -> a -> Dynamic
 
-type Constraints a = (Generic a, Typeable a, SafeCopy a, Serialize a, Show a)
+type Constraints a = (Typeable a, SafeCopy a, Serialize a, Show a)
 
 {-
 -- | A wrapper GADT that imposes the extra constraints on a.
