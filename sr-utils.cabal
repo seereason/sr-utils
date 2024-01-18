@@ -1,5 +1,5 @@
 Name:           sr-utils
-Version:        1.102
+Version:        1.103
 License:        BSD3
 License-File:   COPYING
 Author:         David Fox
@@ -78,6 +78,7 @@ Library
   Default-Extensions: ScopedTypeVariables, StandaloneDeriving, TupleSections, TypeApplications, TypeFamilies
   Exposed-modules:
     Extra.Debug
+    Extra.DynamicG
     Extra.Everywhere
     Extra.Except
     Extra.Exceptionless
