@@ -1,5 +1,5 @@
 Name:           sr-utils
-Version:        1.103
+Version:        1.103.1
 License:        BSD3
 License-File:   COPYING
 Author:         David Fox
@@ -82,6 +82,7 @@ Library
     Extra.Everywhere
     Extra.Except
     Extra.Exceptionless
+    Extra.FastList
     Extra.GenericMap
     Extra.Generics
     Extra.HughesPJ
@@ -104,6 +105,9 @@ Library
       Extra.THIO
     Build-Depends:
       regex-tdfa
+
+  Other-Modules:
+    Extra.FastListExample
 
   if flag(network-uri)
     Build-Depends: network-uri >= 2.6
