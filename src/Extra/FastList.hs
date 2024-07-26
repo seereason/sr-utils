@@ -57,5 +57,7 @@ literally = return . LitE . StringL
 lit :: QuasiQuoter
 lit = QuasiQuoter { quoteExp = literally }
 
+-- | To read the list from a file.  Including it directly in the
+-- source file is equally fast.
 litFile :: QuasiQuoter
 litFile = quoteFile lit
