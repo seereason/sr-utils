@@ -14,7 +14,7 @@ module Extra.Text
 #endif
     ) where
 
-import Data.Algorithm.DiffContext (getContextDiff, prettyContextDiff)
+import Data.Algorithm.DiffContext (getContextDiff, prettyContextDiff, unnumber)
 import Data.Char (isUpper, toUpper)
 import Data.ListLike (groupBy)
 import Data.String (IsString)
@@ -57,8 +57,8 @@ diffText (nameA, textA) (nameB, textB) =
     show (prettyContextDiff
           (HPJ.text nameA)
           (HPJ.text nameB)
-          (HPJ.text . unpack)
-          (getContextDiff 2 (split (== '\n') textA) (split (== '\n') textB)))
+          (HPJ.text . unpack . unnumber)
+          (getContextDiff (Just 2) (split (== '\n') textA) (split (== '\n') textB)))
 
 -- | Convert a camel case string (no whitespace) into a natural
 -- language looking phrase:
