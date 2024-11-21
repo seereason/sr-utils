@@ -4,11 +4,10 @@
 module Extra.Debug
   ( module Extra.Exceptionless
   , TempT, liftTmpT, unTmpT
-  , Temp(Tmp, unTmp)
+  , Temp(Tmp, unTmp), liftTmp
   ) where
 
-import Control.Monad.Catch (MonadCatch)
-import Control.Monad.Trans (MonadIO)
+import Control.Monad.Catch (MonadCatch, SomeException)
 import Extra.Exceptionless
 import GHC.Stack (HasCallStack)
 
@@ -17,8 +16,8 @@ type TempT m a = Exceptionless m a
 liftTmpT :: HasCallStack => m a -> Exceptionless m a
 liftTmpT = liftExceptionless
 
-unTmpT :: (MonadCatch m, MonadIO m, HasCallStack) => Exceptionless m a -> m a
-unTmpT = unExceptionless
+unTmpT :: (MonadCatch m, HasCallStack) => (SomeException -> m a) -> Exceptionless m a -> m a
+unTmpT = runExceptionless
 
 -- | A newtype wrapper for propagating changes through the codebase.
 -- Add this to an argument that needs to change and the caller will
@@ -27,6 +26,8 @@ unTmpT = unExceptionless
 -- it easier to grep for one or the other.  After the 'Temp' wrapper
 -- is added, it is replaced by a more useful type.
 newtype Temp a = Tmp {unTmp :: a}
+liftTmp :: a -> Temp a
+liftTmp = Tmp
 
 {-
 -- | Note that Temp has none of the obvious instances, such as

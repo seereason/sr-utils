@@ -16,11 +16,6 @@ module Extra.Except
       withException
     , displaySomeExceptionType
       -- * Control.Monad.Except extensions
-    , tryError
-    , withError
-    , withError'
-    , mapError
-    , handleError
     , HasIOException(ioException)
     , NonIOException(NonIOException)
     , HasNonIOException(nonIOException)
@@ -41,7 +36,6 @@ import Control.Lens (Prism', review)
 import Control.Monad (MonadPlus(mplus, mzero))
 import Control.Monad.Catch
 import Control.Monad.Except (catchError, ExceptT, liftEither, MonadError, runExceptT, throwError, withExceptT)
-import Control.Monad.Trans (MonadTrans(lift), liftIO)
 import Data.Monoid ((<>))
 import Data.Serialize
 import Data.Typeable (typeOf)
@@ -78,26 +72,6 @@ withException f (SomeException e) = f e
 -- "IOException"
 displaySomeExceptionType :: SomeException -> String
 displaySomeExceptionType = withException (show . typeOf)
-
--- | MonadError analog to the 'try' function.
-tryError :: MonadError e m => m a -> m (Either e a)
-tryError action = (Right <$> action) `catchError` (pure . Left)
-
--- | Absorb an ExceptT e' action into another MonadError instance.
-withError :: MonadError e m => (e' -> e) -> ExceptT e' m a -> m a
-withError f action = runExceptT (withExceptT f action) >>= liftEither
-
--- | Modify the value (but not the type) of an error
-withError' :: MonadError e m => (e -> e) -> m a -> m a
-withError' f action = tryError action >>= either (throwError . f) return
-{-# DEPRECATED withError' "withError might to be able to do this job" #-}
-
-handleError :: MonadError e m => (e -> m a) -> m a -> m a
-handleError = flip catchError
-
--- | MonadError analogue of the 'mapExceptT' function.
-mapError :: (MonadError e m, MonadError e' n) => (m (Either e a) -> n (Either e' b)) -> m a -> n b
-mapError f action = f (tryError action) >>= liftEither
 
 -- | In order to guarantee IOException is caught, do NOT create this
 -- 'HasIOException' instance for IOException.
