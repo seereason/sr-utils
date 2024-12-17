@@ -9,6 +9,7 @@ module Extra.THIO
     , writeSplicesWith
     -- , fixStrings
     , writeSplices
+    , fixSplices
     , pprintW'
     , pprintStyle
     , safeName
@@ -157,11 +158,15 @@ writeSplicesWith writer pretty dest decs = do
   case exists of
     False -> error $ "Could not write splices file to " ++ show dest
     True -> do
-      let new = pack $ fixNames
-                     $ HPJ.renderStyle (HPJ.style {HPJ.lineLength = 1000000 {-HPJ.mode = HPJ.OneLineMode-}})
-                     $ to_HPJ_Doc
-                     $ pretty
-                     $ everywhere (mkT safeName)
-                     $ {-fixText-} decs
+      let new = fixSplices pretty decs
       runIO $ writer dest new
       return decs
+
+fixSplices :: Data a => (a -> Doc) -> a -> Text
+fixSplices pretty decs =
+  pack $ fixNames
+       $ HPJ.renderStyle (HPJ.style {HPJ.lineLength = 1000000 {-HPJ.mode = HPJ.OneLineMode-}})
+       $ to_HPJ_Doc
+       $ pretty
+       $ everywhere (mkT safeName)
+       $ {-fixText-} decs
