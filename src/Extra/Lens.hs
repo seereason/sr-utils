@@ -17,7 +17,7 @@ import Data.Generics.Labels ()
 -- (Dyn has no Serialize instance) or because you already
 -- have a location (not in Dyn) where the value is stored.
 class HasLens s a where
-  hasLens :: Lens' s a
+  hasLens :: HasCallStack => Lens' s a
 
 -- | The 'nubBy' function generalized for any Cons instance.  Adapted
 -- from the code in Data.List.
