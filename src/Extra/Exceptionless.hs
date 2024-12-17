@@ -113,7 +113,21 @@ runExceptionless ::
   -> Exceptionless m a
   -> m a
 runExceptionless f (Exceptionless m) =
-  m `catch` f
+  m `catch` handler
+  where
+    handler :: SomeException -> m a
+    handler se
+      | isAsyncException se = throw se
+      | otherwise = f se
+    _ = callStack
+
+-- | From "Myths and Truth in Haskell Asynchronous Exceptions" -
+-- https://kazu-yamamoto.hatenablog.jp/entry/2024/12/04/180338
+isAsyncException :: Exception e => e -> Bool
+isAsyncException e =
+  case fromException (toException e) of
+    Just (SomeAsyncException _) -> True
+    Nothing -> False
 
 -- | Catch some exception in the 'Exceptionless' monad.
 {-
