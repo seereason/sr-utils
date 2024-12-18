@@ -15,13 +15,14 @@ module Extra.Exceptionless
   , catchAllExceptT
   ) where
 
-import Control.Monad.Catch (Exception, MonadCatch(catch), MonadThrow(throwM), SomeException, try)
+import Control.Exception (Exception(fromException, toException), SomeAsyncException(SomeAsyncException), SomeException)
+import Control.Monad.Catch (MonadCatch(catch), MonadThrow(throwM), try)
 import Control.Monad.Except (ExceptT, MonadError(catchError, throwError))
 import Control.Monad.Reader (MonadReader(ask, local))
 import Control.Monad.State as State (MonadState(get, put))
 import Control.Monad.Trans (MonadIO(liftIO), MonadTrans(lift))
 import GHC.Generics
-import GHC.Stack (HasCallStack)
+import GHC.Stack (HasCallStack, callStack)
 import SeeReason.Log (alogDrop, Priority(DEBUG))
 
 -- | A monad transformer that catches all exceptions.
@@ -117,7 +118,7 @@ runExceptionless f (Exceptionless m) =
   where
     handler :: SomeException -> m a
     handler se
-      | isAsyncException se = throw se
+      | isAsyncException se = throwM se
       | otherwise = f se
     _ = callStack
 

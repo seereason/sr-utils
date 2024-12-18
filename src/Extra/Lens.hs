@@ -11,6 +11,7 @@ module Extra.Lens
 
 import Control.Lens
 import Data.Generics.Labels ()
+import GHC.Stack (HasCallStack)
 
 -- | If you don't want to use the 'Dyn' declare a 'HasLens'
 -- instance.  This is necessary if you want a persistant value
