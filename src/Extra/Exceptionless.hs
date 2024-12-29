@@ -1,9 +1,19 @@
-{-# LANGUAGE CPP, DeriveGeneric, FlexibleInstances, InstanceSigs, MultiParamTypeClasses, RankNTypes, ScopedTypeVariables, StandaloneDeriving, UndecidableInstances #-}
+{-# LANGUAGE CPP #-}
+{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE InstanceSigs #-}
+{-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE StandaloneDeriving #-}
+{-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE UndecidableInstances #-}
 {-# OPTIONS -Wall -Wno-redundant-constraints #-}
 
 module Extra.Exceptionless
   ( Exceptionless(Exceptionless)
-  , liftExceptionless
+  , liftExceptionless, exceptionless
   , unExceptionless
   , runExceptionless
   , mapExceptionless
@@ -14,6 +24,13 @@ module Extra.Exceptionless
   , catchExceptT
   , catchAllExceptT
   ) where
+
+-- for reference:
+--
+-- try :: Exception e => IO a -> IO (Either e a)
+-- try a = (Right <$> a) `catch` (pure . Left)
+--
+-- handle = flip catch
 
 import Control.Exception (Exception(fromException, toException), SomeAsyncException(SomeAsyncException), SomeException)
 import Control.Monad.Catch (MonadCatch(catch), MonadThrow(throwM), try)
@@ -77,6 +94,10 @@ instance (MonadError e m, MonadCatch m, MonadIO m) => MonadError e (Exceptionles
 liftExceptionless :: HasCallStack => m a -> Exceptionless m a
 liftExceptionless = Exceptionless
 
+-- | Another name for 'liftExceptionless'.
+exceptionless :: HasCallStack => m a -> Exceptionless m a
+exceptionless = Exceptionless
+
 -- | modify a Exceptionless computation without catching exceptions.
 mapExceptionless :: (m a -> m b) -> Exceptionless m a -> Exceptionless m b
 mapExceptionless f (Exceptionless m) = Exceptionless (f m)
@@ -97,6 +118,26 @@ catchExceptionless m f = tryExceptionless m >>= lift . either f pure
 -- | The 'handle' function for 'Exceptionless'.
 handleExceptionless :: (MonadCatch m, MonadIO m, Exception e) => (e -> m a) -> Exceptionless m a -> Exceptionless m a
 handleExceptionless = flip catchExceptionless
+
+-- | This is the exceptionless analogue of liftIO, it lifts any
+-- 'MonadIO' action into the Exceptionless monad, so that all
+-- synchronous exceptions will be caught by the enclosing call to
+-- 'runExceptionless'.
+fromIO ::
+  forall e m a.
+  (MonadIO m,
+   MonadCatch m,
+   MonadThrow m,
+   Exception e,
+   MonadError e m,
+   HasCallStack)
+  => (SomeException -> e) -> m a -> Exceptionless m a
+fromIO f io =
+  tryExceptionless (liftExceptionless io) >>= \case
+    Left se | isAsyncException se -> Exceptionless (throwM (f se))
+    Left se -> liftExceptionless (throwM (f se))
+    Right a -> pure a
+  where _ = callStack
 
 -- | Log and rethrow any exception.
 logExceptionless ::

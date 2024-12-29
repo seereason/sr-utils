@@ -1,5 +1,5 @@
 Name:           sr-utils
-Version:        1.104.1
+Version:        1.105
 License:        BSD3
 License-File:   COPYING
 Author:         David Fox
@@ -77,6 +77,7 @@ Library
   Default-Extensions: FlexibleInstances, FlexibleContexts, MultiParamTypeClasses, RankNTypes
   Default-Extensions: ScopedTypeVariables, StandaloneDeriving, TupleSections, TypeApplications, TypeFamilies
   Exposed-modules:
+    Extra.Actor
     Extra.Debug
     Extra.DynamicG
     Extra.Everywhere
