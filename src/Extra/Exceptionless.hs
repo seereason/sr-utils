@@ -54,7 +54,7 @@ instance (Monad m, Applicative m) => Applicative (Exceptionless m) where
   (<*>) :: HasCallStack => Exceptionless m (a -> b) -> Exceptionless m a -> Exceptionless m b
   (Exceptionless f) <*> (Exceptionless m) = Exceptionless $ f <*> m
 
-instance (MonadCatch m, MonadIO m) => Monad (Exceptionless m) where
+instance (Monad m) => Monad (Exceptionless m) where
   (>>=) :: HasCallStack => Exceptionless m a -> (a -> Exceptionless m b) -> Exceptionless m b
   Exceptionless a >>= f = Exceptionless (a >>= unwrap . f)
 
