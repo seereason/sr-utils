@@ -40,10 +40,14 @@ import Control.Monad.State as State (MonadState(get, put))
 import Control.Monad.Trans (MonadIO(liftIO), MonadTrans(lift))
 import GHC.Generics
 import GHC.Stack (HasCallStack, callStack)
-import SeeReason.Log (alogDrop, Priority(DEBUG))
+import SeeReason.Errors (isAsyncException)
+import SeeReason.Log (alogDrop, LoggerIO(logConfig), Priority(DEBUG))
 
 -- | A monad transformer that catches all exceptions.
 newtype Exceptionless m a = Exceptionless {unwrap :: m a} deriving Generic
+
+instance (LoggerIO m, MonadCatch m) => LoggerIO (Exceptionless m) where
+  logConfig = lift logConfig
 
 instance Functor m => Functor (Exceptionless m) where
   fmap :: HasCallStack => (a -> b) -> Exceptionless m a -> Exceptionless m b
@@ -119,26 +123,6 @@ catchExceptionless m f = tryExceptionless m >>= lift . either f pure
 handleExceptionless :: (MonadCatch m, MonadIO m, Exception e) => (e -> m a) -> Exceptionless m a -> Exceptionless m a
 handleExceptionless = flip catchExceptionless
 
--- | This is the exceptionless analogue of liftIO, it lifts any
--- 'MonadIO' action into the Exceptionless monad, so that all
--- synchronous exceptions will be caught by the enclosing call to
--- 'runExceptionless'.
-fromIO ::
-  forall e m a.
-  (MonadIO m,
-   MonadCatch m,
-   MonadThrow m,
-   Exception e,
-   MonadError e m,
-   HasCallStack)
-  => (SomeException -> e) -> m a -> Exceptionless m a
-fromIO f io =
-  tryExceptionless (liftExceptionless io) >>= \case
-    Left se | isAsyncException se -> Exceptionless (throwM (f se))
-    Left se -> liftExceptionless (throwM (f se))
-    Right a -> pure a
-  where _ = callStack
-
 -- | Log and rethrow any exception.
 logExceptionless ::
   (MonadCatch m, MonadIO m, HasCallStack)
@@ -162,14 +146,6 @@ runExceptionless f (Exceptionless m) =
       | isAsyncException se = throwM se
       | otherwise = f se
     _ = callStack
-
--- | From "Myths and Truth in Haskell Asynchronous Exceptions" -
--- https://kazu-yamamoto.hatenablog.jp/entry/2024/12/04/180338
-isAsyncException :: Exception e => e -> Bool
-isAsyncException e =
-  case fromException (toException e) of
-    Just (SomeAsyncException _) -> True
-    Nothing -> False
 
 -- | Catch some exception in the 'Exceptionless' monad.
 {-
