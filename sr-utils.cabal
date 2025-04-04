@@ -1,5 +1,5 @@
 Name:           sr-utils
-Version:        1.105
+Version:        1.105.1
 License:        BSD3
 License-File:   COPYING
 Author:         David Fox
@@ -38,6 +38,7 @@ Library
     base64-bytestring,
     bytestring,
     cereal,
+    cereal-text,
     containers,
     Diff >= 1,
     directory,

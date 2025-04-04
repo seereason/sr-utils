@@ -27,7 +27,7 @@ import System.Directory (getCurrentDirectory, removeFile, renameFile)
 import System.FilePath.Find as Find
     ((==?), (&&?), always, extension, fileType, FileType(RegularFile), find)
 import System.IO.Error (isDoesNotExistError)
-import System.Log.Logger (logM, Priority(DEBUG, ERROR))
+import System.Log.Logger (logM)
 
 testAndWriteDotNew :: FilePath -> Text -> IO ()
 testAndWriteDotNew dest new = testAndWrite writeDotNew dest new

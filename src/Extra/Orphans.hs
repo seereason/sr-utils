@@ -18,8 +18,8 @@ import Data.Serialize (Serialize(..))
 import Data.Serialize.Get (label)
 import Data.Text as T hiding (concat, intercalate)
 import Data.Text.Lazy as LT hiding (concat, intercalate)
-import Data.Text.Encoding as TE
-import Data.Text.Lazy.Encoding as TLE
+-- import Data.Text.Encoding as TE
+-- import Data.Text.Lazy.Encoding as TLE
 import Data.Time (UTCTime(..), Day(ModifiedJulianDay), TimeOfDay(..), timeOfDayToTime, toModifiedJulianDay, DiffTime)
 import Data.Typeable (Typeable)
 import Data.UserId (UserId(..))
@@ -136,6 +136,8 @@ instance SafeCopy URIAuth where version = 0
 $(concat <$> sequence [ deriveLiftMany [''URI, ''URIAuth] ])
 #endif
 
+#if 0
+-- Switch to cereal-text package
 instance Serialize T.Text where
     put = put . TE.encodeUtf8
     get = TE.decodeUtf8 <$> get
@@ -143,6 +145,7 @@ instance Serialize T.Text where
 instance Serialize LT.Text where
     put = put . TLE.encodeUtf8
     get = TLE.decodeUtf8 <$> get
+#endif
 
 -- | This is private, we can't create a Generic instance for it.
 instance Serialize DiffTime where
