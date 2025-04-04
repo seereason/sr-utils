@@ -15,6 +15,7 @@ import Data.Proxy (Proxy(Proxy))
 import Data.SafeCopy (base, contain,
                       SafeCopy(errorTypeName, getCopy, kind, putCopy, version), safeGet, safePut)
 import Data.Serialize (Serialize(..))
+import Data.Serialize.Text ({-instances-})
 import Data.Serialize.Get (label)
 import Data.Text as T hiding (concat, intercalate)
 import Data.Text.Lazy as LT hiding (concat, intercalate)
