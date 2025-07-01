@@ -41,13 +41,10 @@ import Control.Monad.Trans (MonadIO(liftIO), MonadTrans(lift))
 import GHC.Generics
 import GHC.Stack (HasCallStack, callStack)
 import SeeReason.Errors (isAsyncException)
-import SeeReason.Log (alogDrop, LoggerIO(logConfig), Priority(DEBUG))
+import SeeReason.Log (alogDrop, Priority(DEBUG))
 
 -- | A monad transformer that catches all exceptions.
 newtype Exceptionless m a = Exceptionless {unwrap :: m a} deriving Generic
-
-instance (LoggerIO m, MonadCatch m) => LoggerIO (Exceptionless m) where
-  logConfig = lift logConfig
 
 instance Functor m => Functor (Exceptionless m) where
   fmap :: HasCallStack => (a -> b) -> Exceptionless m a -> Exceptionless m b
