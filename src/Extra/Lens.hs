@@ -2,7 +2,11 @@
 {-# OPTIONS -Wall #-}
 
 module Extra.Lens
-  ( HasLens(hasLens)
+  ( HasReader(ask)
+  , HasState(get, put)
+  , HasReader1(ask1)
+  , HasState1(get1, put1)
+  , HasLens(hasLens)
   , nubBy
   -- * Re-exports
   , ReifiedLens'
@@ -12,6 +16,25 @@ module Extra.Lens
 import Control.Lens
 import Data.Generics.Labels ()
 import GHC.Stack (HasCallStack)
+
+-- | This says we can obtain a value of type r from monad @m@.  It is
+-- similar to doing a 'view' on a lens, but doesn't need to be.
+class Monad m => HasReader r m where
+  ask :: m r
+
+-- | Similar to HasReader, but 'ask1' takes an argument of type @a@.
+class Monad m => HasReader1 r m a where
+  ask1 :: a -> m r
+
+-- | Similar to HasReader, but also provides 'put' which sets the @r@ value.
+class Monad m => HasState r m where
+  get :: m r
+  put :: r -> m ()
+
+-- | Similar to HasState1, but the methods also take an argument of type a.
+class Monad m => HasState1 r m a where
+  get1 :: a -> m r
+  put1 :: a -> r -> m ()
 
 -- | If you don't want to use the 'Dyn' declare a 'HasLens'
 -- instance.  This is necessary if you want a persistant value
