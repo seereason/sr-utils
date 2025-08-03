@@ -20,21 +20,33 @@ import GHC.Stack (HasCallStack)
 -- | This says we can obtain a value of type r from monad @m@.  It is
 -- similar to doing a 'view' on a lens, but doesn't need to be.
 class Monad m => HasReader r m where
-  ask :: m r
+  ask :: HasCallStack => m r
 
 -- | Similar to HasReader, but 'ask1' takes an argument of type @a@.
 class Monad m => HasReader1 r m a where
-  ask1 :: a -> m r
+  ask1 :: HasCallStack => a -> m r
+
+view1 :: (HasReader1 s m k, HasCallStack) => k -> Getter s a -> m a
+view1 k lns = view lns <$> ask1 k
+
+use1 :: (HasState1 s m k, HasCallStack) => k -> Getter s a -> m a
+use1 k lns = view lns <$> get1 k
 
 -- | Similar to HasReader, but also provides 'put' which sets the @r@ value.
 class Monad m => HasState r m where
-  get :: m r
-  put :: r -> m ()
+  get :: HasCallStack => m r
+  put :: HasCallStack => r -> m ()
 
 -- | Similar to HasState1, but the methods also take an argument of type a.
 class Monad m => HasState1 r m a where
-  get1 :: a -> m r
-  put1 :: a -> r -> m ()
+  get1 :: HasCallStack => a -> m r
+  put1 :: HasCallStack => a -> r -> m ()
+
+over1 :: forall s m k a. (HasState1 s m k, HasCallStack) => k -> Lens' s a -> (a -> a) -> m ()
+over1 k lns f = put1 @s k =<< (over lns f <$> get1 k)
+
+assign1 :: (HasState1 s m k, HasCallStack) => k -> Lens' s a -> a -> m ()
+assign1 k lns a = over1 k lns (const a)
 
 -- | If you don't want to use the 'Dyn' declare a 'HasLens'
 -- instance.  This is necessary if you want a persistant value
