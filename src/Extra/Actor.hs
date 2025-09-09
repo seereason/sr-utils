@@ -12,8 +12,6 @@ module Extra.Actor
   , logged
   , actorUIDs
   , WhoDis(..)
-  , ActorLens(actorLens)
-  , HasActor(actor)
   ) where
 
 import Control.Lens
@@ -72,9 +70,3 @@ newtype WhoDis = WhoDis UserId deriving (Generic, Eq, Ord, Show)
 {-# DEPRECATED WhoDis "Use Actor" #-}
 instance SafeCopy WhoDis where version = 3; kind = base
 instance Serialize WhoDis where get = safeGet; put = safePut
-
-class ActorLens s where
-  actorLens :: Lens' s (Maybe Actor)
-
-class HasActor m where
-  actor :: m Actor

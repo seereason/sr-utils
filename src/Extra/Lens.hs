@@ -18,7 +18,10 @@ import Data.Generics.Labels ()
 import GHC.Stack (HasCallStack)
 
 -- | This says we can obtain a value of type r from monad @m@.  It is
--- similar to doing a 'view' on a lens, but doesn't need to be.
+-- similar to doing a 'view' on a lens, but doesn't need to be a
+-- reader monad.  These classes really belong in a module called
+-- Extra.Has, they are more general than HasLens.  (I'm not sure these
+-- are a good idea, they confused me when I first tried them. -dsf)
 class Monad m => HasReader r m where
   ask :: HasCallStack => m r
 
