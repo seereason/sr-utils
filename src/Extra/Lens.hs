@@ -1,12 +1,14 @@
-{-# LANGUAGE OverloadedLabels #-}
+{-# LANGUAGE OverloadedLabels, QuantifiedConstraints #-}
 {-# OPTIONS -Wall #-}
+{-# OPTIONS -Werror=unused-top-binds #-}
 
 module Extra.Lens
-  ( HasReader(ask)
-  , HasState(get, put)
-  , HasReader1(ask1)
-  , HasState1(get1, put1)
-  , HasLens(hasLens)
+  ( HasLens(hasLens)
+  , HasLens1(hasLens1)
+  , HasM(hasM)
+  , HasM1(hasM1)
+  , PutM(putM)
+  , PutM1(putM1)
   , nubBy
   -- * Re-exports
   , ReifiedLens'
@@ -22,41 +24,23 @@ import GHC.Stack (HasCallStack)
 -- reader monad.  These classes really belong in a module called
 -- Extra.Has, they are more general than HasLens.  (I'm not sure these
 -- are a good idea, they confused me when I first tried them. -dsf)
-class Monad m => HasReader r m where
-  ask :: HasCallStack => m r
+class Monad m => HasM m r where hasM :: m r
+class Monad m => HasM1 m r k where hasM1 :: k -> m r
 
--- | Similar to HasReader, but 'ask1' takes an argument of type @a@.
-class Monad m => HasReader1 r m a where
-  ask1 :: HasCallStack => a -> m r
+-- | These say we can both get a value from and put a value into a
+-- monad m, like a state monad.
+class HasM m r => PutM m r where putM :: r -> m ()
+class HasM1 m r k => PutM1 m r k where putM1 :: k -> r -> m ()
 
-view1 :: (HasReader1 s m k, HasCallStack) => k -> Getter s a -> m a
-view1 k lns = view lns <$> ask1 k
-
-use1 :: (HasState1 s m k, HasCallStack) => k -> Getter s a -> m a
-use1 k lns = view lns <$> get1 k
-
--- | Similar to HasReader, but also provides 'put' which sets the @r@ value.
-class Monad m => HasState r m where
-  get :: HasCallStack => m r
-  put :: HasCallStack => r -> m ()
-
--- | Similar to HasState1, but the methods also take an argument of type a.
-class Monad m => HasState1 r m a where
-  get1 :: HasCallStack => a -> m r
-  put1 :: HasCallStack => a -> r -> m ()
-
-over1 :: forall s m k a. (HasState1 s m k, HasCallStack) => k -> Lens' s a -> (a -> a) -> m ()
-over1 k lns f = put1 @s k =<< (over lns f <$> get1 k)
-
-assign1 :: (HasState1 s m k, HasCallStack) => k -> Lens' s a -> a -> m ()
-assign1 k lns a = over1 k lns (const a)
+class HasLens1 s r k where
+  hasLens1 :: HasCallStack => k -> Lens' s r
 
 -- | If you don't want to use the 'Dyn' declare a 'HasLens'
 -- instance.  This is necessary if you want a persistant value
 -- (Dyn has no Serialize instance) or because you already
 -- have a location (not in Dyn) where the value is stored.
-class HasLens s a where
-  hasLens :: HasCallStack => Lens' s a
+class HasLens s r where
+  hasLens :: HasCallStack => Lens' s r
 
 -- | The 'nubBy' function generalized for any Cons instance.  Adapted
 -- from the code in Data.List.
