@@ -1,6 +1,8 @@
-{-# LANGUAGE OverloadedLabels, QuantifiedConstraints #-}
-{-# OPTIONS -Wall #-}
-{-# OPTIONS -Werror=unused-top-binds #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE OverloadedLabels #-}
+{-# LANGUAGE QuantifiedConstraints #-}
+{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module Extra.Lens
   ( HasLens(hasLens)
@@ -24,13 +26,13 @@ import GHC.Stack (HasCallStack)
 -- reader monad.  These classes really belong in a module called
 -- Extra.Has, they are more general than HasLens.  (I'm not sure these
 -- are a good idea, they confused me when I first tried them. -dsf)
-class Monad m => HasM m r where hasM :: m r
-class Monad m => HasM1 m r k where hasM1 :: k -> m r
+class Monad m => HasM r m where hasM :: m r
+class Monad m => HasM1 r m k where hasM1 :: k -> m r
 
 -- | These say we can both get a value from and put a value into a
 -- monad m, like a state monad.
-class HasM m r => PutM m r where putM :: r -> m ()
-class HasM1 m r k => PutM1 m r k where putM1 :: k -> r -> m ()
+class HasM r m => PutM r m where putM :: r -> m ()
+class HasM1 r m k => PutM1 r m k where putM1 :: k -> r -> m ()
 
 class HasLens1 s r k where
   hasLens1 :: HasCallStack => k -> Lens' s r
