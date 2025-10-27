@@ -24,8 +24,8 @@ import Control.Exception (throw)
 import Control.Monad.Catch
 import Control.Monad.Fix
 import Control.Monad.Identity
-import Control.Monad.RWS
-import Control.Monad.State
+import Control.Monad.RWS.Strict (RWST)
+import Control.Monad.State.Strict (get, gets, evalStateT, mapStateT, put, runStateT, StateT)
 import Control.Monad.Except
 import Control.Monad.Reader
 import Control.Monad.Writer
