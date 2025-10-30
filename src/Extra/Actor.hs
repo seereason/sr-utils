@@ -24,7 +24,7 @@ import Data.Text
 import Extra.Except
 import GHC.Generics (Generic)
 import GHC.Stack (CallStack, getCallStack)
-import SeeReason.SrcLoc (compactStack)
+import SeeReason.Log (compactStack)
 
 class HasUserId u where userId :: u -> UserId
 instance HasUserId UserId where userId = id

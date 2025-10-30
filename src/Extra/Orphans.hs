@@ -172,19 +172,3 @@ instance Serialize UUID where
 deriving instance Serialize Loc
 deriving instance Serialize URI
 deriving instance Serialize URIAuth
-
-deriving instance Generic CallStack
-deriving instance Eq CallStack
-deriving instance Ord CallStack
-deriving instance Serialize CallStack
-deriving instance SafeCopy CallStack
-
-#if !MIN_VERSION_base(4,15,0)
-deriving instance Generic SrcLoc
-#endif
-deriving instance Ord SrcLoc
-deriving instance Serialize SrcLoc
-deriving instance SafeCopy SrcLoc
-deriving instance Typeable SrcLoc
-instance Pretty SrcLoc where
-  pPrint SrcLoc{..} = text (srcLocModule <> ":" <> Prelude.show srcLocStartLine)
