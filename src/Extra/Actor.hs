@@ -23,8 +23,7 @@ import Data.UserId
 import Data.Text
 import Extra.Except
 import GHC.Generics (Generic)
-import GHC.Stack (CallStack, getCallStack)
-import SeeReason.Log (compactStack)
+import GHC.Stack (CallStack, getCallStack, prettyCallStack)
 
 class HasUserId u where userId :: u -> UserId
 instance HasUserId UserId where userId = id
@@ -32,7 +31,7 @@ instance HasUserId UserId where userId = id
 -- | Error - a logged in user is required
 data NoUser = NoUser Text CallStack
 instance Show NoUser where
-  show (NoUser t s) = "NoUser " <> show t <> " " <> compactStack (getCallStack s)
+  show (NoUser t s) = "NoUser " <> show t <> " " <> prettyCallStack s
 
 instance HasIOException e => HasIOException (Either NoUser e) where ioException = _Right . ioException
 

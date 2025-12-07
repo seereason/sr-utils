@@ -41,7 +41,7 @@ import Control.Monad.Trans (MonadIO(liftIO), MonadTrans(lift))
 import GHC.Generics
 import GHC.Stack (HasCallStack, callStack)
 import SeeReason.Errors (isAsyncException)
-import SeeReason.Log (alogDrop, Priority(DEBUG))
+import System.Log.Logger (logM, Priority(DEBUG))
 
 -- | A monad transformer that catches all exceptions.
 newtype Exceptionless m a = Exceptionless {unwrap :: m a} deriving Generic
@@ -126,7 +126,7 @@ logExceptionless ::
   => Exceptionless m a
   -> Exceptionless m a
 logExceptionless m =
-  Exceptionless $ runExceptionless (\(e :: SomeException) -> alogDrop id DEBUG (show e) >> throwM e) m
+  Exceptionless $ runExceptionless (\(e :: SomeException) -> liftIO (logM "Extra.Exceptionless" DEBUG (show e)) >> throwM e) m
 
 -- | Exit the 'Exceptionless' monad, passing the 'SomeException'
 -- containing any exception to @f@.
