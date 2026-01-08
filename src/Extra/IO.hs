@@ -22,7 +22,7 @@ import Data.Text.IO as Text (readFile, writeFile)
 import Data.Time (getCurrentTime, diffUTCTime, getCurrentTime, NominalDiffTime)
 --import Extra.Log (alog)
 import Extra.Text (diffText)
-import SeeReason.Log (alog, Priority(DEBUG, ERROR))
+-- import SeeReason.Log (alog, Priority(DEBUG, ERROR))
 import System.Directory (getCurrentDirectory, removeFile, renameFile)
 import System.FilePath.Find as Find
     ((==?), (&&?), always, extension, fileType, FileType(RegularFile), find)
@@ -42,17 +42,17 @@ testAndWriteBackup dest new = testAndWrite (\dest' _ new' -> writeFileWithBackup
 testAndWrite :: (FilePath -> Text -> Text -> IO ()) -> FilePath -> Text -> IO ()
 testAndWrite changeAction dest new = do
   here <- getCurrentDirectory
-  alog DEBUG ("testAndWrite " <> show dest <> " " <> show (shorten 50 new) <> " (cwd=" <> show here <> ")")
+  -- alog DEBUG ("testAndWrite " <> show dest <> " " <> show (shorten 50 new) <> " (cwd=" <> show here <> ")")
   removeFileMaybe (dest <> ".new")
   try (Text.readFile dest >>= \old ->
        when (old /= new) (changeAction dest old new)) >>=
     either (\(e :: IOException) ->
               case isDoesNotExistError e of
                 True -> do
-                  alog DEBUG "testAndWrite - no existing version"
+                  -- alog DEBUG "testAndWrite - no existing version"
                   Text.writeFile dest new
                 False -> do
-                  alog ERROR ("testAndWrite " <> show dest <> " - IOException " ++ show e)
+                  logM "Extra.IO" ERROR ("testAndWrite " <> show dest <> " - IOException " ++ show e)
                   throw e)
            return
 

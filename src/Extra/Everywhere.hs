@@ -97,7 +97,7 @@ mkT f r = maybe r (\r' -> maybe r id (cast (f r'))) (cast @_ @a r)
 extT :: (Typeable a, Typeable b, Typeable r) => (a -> a) -> (b -> b) -> r -> r
 extT f g = mkT f . mkT g
 
-shorten :: forall s. (Generic s, Typeable s, Show s) => Int -> s -> s
+shorten :: forall s. (Typeable s{-, Generic s, Show s-}) => Int -> s -> s
 shorten n = f . g . h
   where
     f :: s -> s

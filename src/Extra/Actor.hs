@@ -12,8 +12,6 @@ module Extra.Actor
   , logged
   , actorUIDs
   , WhoDis(..)
-  , ActorLens(actorLens)
-  , HasActor(actor)
   ) where
 
 import Control.Lens
@@ -25,8 +23,7 @@ import Data.UserId
 import Data.Text
 import Extra.Except
 import GHC.Generics (Generic)
-import GHC.Stack (CallStack, getCallStack)
-import SeeReason.SrcLoc (compactStack)
+import GHC.Stack (CallStack, getCallStack, prettyCallStack)
 
 class HasUserId u where userId :: u -> UserId
 instance HasUserId UserId where userId = id
@@ -34,7 +31,7 @@ instance HasUserId UserId where userId = id
 -- | Error - a logged in user is required
 data NoUser = NoUser Text CallStack
 instance Show NoUser where
-  show (NoUser t s) = "NoUser " <> show t <> " " <> compactStack (getCallStack s)
+  show (NoUser t s) = "NoUser " <> show t <> " " <> prettyCallStack s
 
 instance HasIOException e => HasIOException (Either NoUser e) where ioException = _Right . ioException
 
@@ -72,9 +69,3 @@ newtype WhoDis = WhoDis UserId deriving (Generic, Eq, Ord, Show)
 {-# DEPRECATED WhoDis "Use Actor" #-}
 instance SafeCopy WhoDis where version = 3; kind = base
 instance Serialize WhoDis where get = safeGet; put = safePut
-
-class ActorLens s where
-  actorLens :: Lens' s (Maybe Actor)
-
-class HasActor m where
-  actor :: m Actor

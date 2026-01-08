@@ -1,8 +1,17 @@
+{-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE OverloadedLabels #-}
-{-# OPTIONS -Wall #-}
+{-# LANGUAGE QuantifiedConstraints #-}
+{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module Extra.Lens
   ( HasLens(hasLens)
+  , HasLens1(hasLens1)
+  , HasM(hasM), viewM, previewM
+  , HasM1(hasM1)
+  , PutM(putM), assignM
+  , PutM1(putM1)
   , nubBy
   -- * Re-exports
   , ReifiedLens'
@@ -11,14 +20,40 @@ module Extra.Lens
 
 import Control.Lens
 import Data.Generics.Labels ()
+import Data.Typeable (Typeable)
 import GHC.Stack (HasCallStack)
+
+-- | This says we can obtain a value of type r from monad @m@.  It is
+-- similar to doing a 'view' on a lens, but doesn't need to be a
+-- reader monad.  These classes really belong in a module called
+-- Extra.Has, they are more general than HasLens.  (I'm not sure these
+-- are a good idea, they confused me when I first tried them. -dsf)
+class Monad m => HasM r m where hasM :: m r
+class Monad m => HasM1 r m k where hasM1 :: k -> m r
+
+viewM :: HasM r m => Getter r a -> m a
+viewM lns = view lns <$> hasM
+
+previewM :: HasM r m => Fold r a -> m (Maybe a)
+previewM lns = preview lns <$> hasM
+
+-- | These say we can both get a value from and put a value into a
+-- monad m, like a state monad.
+class HasM r m => PutM r m where putM :: r -> m ()
+class HasM1 r m k => PutM1 r m k where putM1 :: k -> r -> m ()
+
+assignM :: forall s m a b. PutM s m => ASetter s s a b -> b -> m ()
+assignM lns b = putM @s =<< set lns b <$> hasM
+
+class HasLens1 s r k where
+  hasLens1 :: HasCallStack => k -> Lens' s r
 
 -- | If you don't want to use the 'Dyn' declare a 'HasLens'
 -- instance.  This is necessary if you want a persistant value
 -- (Dyn has no Serialize instance) or because you already
 -- have a location (not in Dyn) where the value is stored.
-class HasLens s a where
-  hasLens :: HasCallStack => Lens' s a
+class Typeable s => HasLens s r where
+  hasLens :: HasCallStack => Lens' s r
 
 -- | The 'nubBy' function generalized for any Cons instance.  Adapted
 -- from the code in Data.List.

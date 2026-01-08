@@ -1,0 +1,32 @@
+commit 4df76103f1ec9d3d7a4a26d5f8118dcb51050553
+Author: David Fox <dsf@seereason.com>
+Date:   Mon Oct 6 06:42:58 2025 -0700
+
+    Use strict versions of State and RWS in Supply monad
+
+diff --git a/sr-utils.cabal b/sr-utils.cabal
+index 9e2d027..b89e628 100644
+--- a/sr-utils.cabal
++++ b/sr-utils.cabal
+@@ -1,5 +1,5 @@
+ Name:           sr-utils
+-Version:        1.110
++Version:        1.111
+ License:        BSD3
+ License-File:   COPYING
+ Author:         David Fox
+diff --git a/src/Extra/Monad/Supply.hs b/src/Extra/Monad/Supply.hs
+index 1e57d99..29381c5 100644
+--- a/src/Extra/Monad/Supply.hs
++++ b/src/Extra/Monad/Supply.hs
+@@ -24,8 +24,8 @@ import Control.Exception (throw)
+ import Control.Monad.Catch
+ import Control.Monad.Fix
+ import Control.Monad.Identity
+-import Control.Monad.RWS
+-import Control.Monad.State
++import Control.Monad.RWS.Strict
++import Control.Monad.State.Strict
+ import Control.Monad.Except
+ import Control.Monad.Reader
+ import Control.Monad.Writer
