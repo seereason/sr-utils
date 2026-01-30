@@ -1,0 +1,96 @@
+{
+  "nodes": {
+    "nixpkgs": {
+      "locked": {
+        "lastModified": 1769744873,
+        "narHash": "sha256-eEfZhCP/Tj8wSyR2HwvtmY3OdmSVgCNzFDEOXDzXcTM=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "4fec78dd4bc6b6603281d7cfcf00df2377f5ceae",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "4fec78dd4bc6b6603281d7cfcf00df2377f5ceae",
+        "type": "github"
+      }
+    },
+    "nixpkgs_2": {
+      "locked": {
+        "lastModified": 1768414184,
+        "narHash": "sha256-HphndsfhmCxbMa9RaFUnie9YOm6wqlYRywOEWyglYrc=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "5ca374dcc743a89261c266c993c5d66775fae109",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
+    "nixpkgs_3": {
+      "locked": {
+        "lastModified": 1768414184,
+        "narHash": "sha256-HphndsfhmCxbMa9RaFUnie9YOm6wqlYRywOEWyglYrc=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "5ca374dcc743a89261c266c993c5d66775fae109",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
+    "root": {
+      "inputs": {
+        "nixpkgs": "nixpkgs",
+        "sr-errors": "sr-errors"
+      }
+    },
+    "sr-errors": {
+      "inputs": {
+        "nixpkgs": "nixpkgs_2",
+        "userid": "userid"
+      },
+      "locked": {
+        "lastModified": 1769710436,
+        "narHash": "sha256-ka7Yb10eF/RoyWg3mbXIPEpeRvzLi5IYlG7WAQwn1qo=",
+        "owner": "seereason",
+        "repo": "sr-errors",
+        "rev": "d02c4d57f5f4adcf57b4ccdde57db33fc84c50da",
+        "type": "github"
+      },
+      "original": {
+        "owner": "seereason",
+        "ref": "ghc912",
+        "repo": "sr-errors",
+        "type": "github"
+      }
+    },
+    "userid": {
+      "inputs": {
+        "nixpkgs": "nixpkgs_3"
+      },
+      "locked": {
+        "lastModified": 1768415323,
+        "narHash": "sha256-NNDTYJst9QegJs5Yva//HkH/1CpByF83mOJ4A2eS0Nk=",
+        "owner": "seereason",
+        "repo": "userid",
+        "rev": "2b454b48b4c89c1392916a61f178f8c2c007c671",
+        "type": "github"
+      },
+      "original": {
+        "owner": "seereason",
+        "repo": "userid",
+        "type": "github"
+      }
+    }
+  },
+  "root": "root",
+  "version": 7
+}
