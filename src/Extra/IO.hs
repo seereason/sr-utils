@@ -17,13 +17,13 @@ import Control.Exception as E (IOException, throw, try)
 import Control.Monad (when)
 import Control.Monad.Trans (liftIO, MonadIO)
 import Data.Monoid ((<>))
-import Data.Text as Text (length, take, Text)
+import Data.Text as Text ({-length, take,-} Text)
 import Data.Text.IO as Text (readFile, writeFile)
 import Data.Time (getCurrentTime, diffUTCTime, getCurrentTime, NominalDiffTime)
 --import Extra.Log (alog)
 import Extra.Text (diffText)
 -- import SeeReason.Log (alog, Priority(DEBUG, ERROR))
-import System.Directory (getCurrentDirectory, removeFile, renameFile)
+import System.Directory ({-getCurrentDirectory,-} removeFile, renameFile)
 import System.FilePath.Find as Find
     ((==?), (&&?), always, extension, fileType, FileType(RegularFile), find)
 import System.IO.Error (isDoesNotExistError)
@@ -41,7 +41,7 @@ testAndWriteBackup dest new = testAndWrite (\dest' _ new' -> writeFileWithBackup
 -- existing .new file is removed.
 testAndWrite :: (FilePath -> Text -> Text -> IO ()) -> FilePath -> Text -> IO ()
 testAndWrite changeAction dest new = do
-  here <- getCurrentDirectory
+  -- here <- getCurrentDirectory
   -- alog DEBUG ("testAndWrite " <> show dest <> " " <> show (shorten 50 new) <> " (cwd=" <> show here <> ")")
   removeFileMaybe (dest <> ".new")
   try (Text.readFile dest >>= \old ->
@@ -56,11 +56,13 @@ testAndWrite changeAction dest new = do
                   throw e)
            return
 
+#if 0
 -- | Shorten a string to a maximum length by replacing its suffix with "..."
 shorten :: Int -> Text -> Text
 shorten n t | n <= 3 = Text.take n t -- no room for an ellipsis
 shorten n t | Text.length t > n - 3 = Text.take (n - 3) t <> "..."
 shorten _ t = t
+#endif
 
 -- | If the new file does not match the old, write it to file.new and error.
 writeDotNew :: FilePath -> Text -> Text -> IO ()

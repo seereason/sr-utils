@@ -4,7 +4,7 @@ module Extra.QuickCheck
 
 import Control.Exception
 import Test.QuickCheck
-import Data.Semigroup
+-- import Data.Semigroup
 
 instance Exception Result
 

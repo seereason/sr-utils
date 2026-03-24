@@ -32,7 +32,7 @@ module Extra.Exceptionless
 --
 -- handle = flip catch
 
-import Control.Exception (Exception(fromException, toException), SomeAsyncException(SomeAsyncException), SomeException)
+import Control.Exception (Exception, SomeException)
 import Control.Monad.Catch (MonadCatch(catch), MonadThrow(throwM), try)
 import Control.Monad.Except (ExceptT, MonadError(catchError, throwError))
 import Control.Monad.Reader (MonadReader(ask, local))

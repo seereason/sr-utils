@@ -23,7 +23,7 @@ import Data.UserId
 import Data.Text
 import Extra.Except
 import GHC.Generics (Generic)
-import GHC.Stack (CallStack, getCallStack, prettyCallStack)
+import GHC.Stack (CallStack, {-getCallStack,-} prettyCallStack)
 
 class HasUserId u where userId :: u -> UserId
 instance HasUserId UserId where userId = id
