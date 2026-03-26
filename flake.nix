@@ -1,14 +1,14 @@
 {
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs?rev=4fec78dd4bc6b6603281d7cfcf00df2377f5ceae";
+    nixpkgs.url = "github:nixos/nixpkgs?rev=9e2e8a7878573d312db421d69e071690ec34e98c";
     sr-errors.url = "github:seereason/sr-errors?ref=ghc912";
   };
   outputs = { self, nixpkgs, sr-errors }:
     let
       system = "x86_64-linux";
-      overlay = final: prev: prev // {
+      overlay = final: prev: {
         sr-errors = sr-errors;
-        sr-utils = final.callCabal2nix "sr-utils" ./. {};
+        sr-utils = final.callCabal2nix "sr-utils" ./. { buildDepends = [sr-errors]; };
       };
       pkgs = nixpkgs.legacyPackages.${system};
       version="ghc9122";
