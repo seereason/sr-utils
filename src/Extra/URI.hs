@@ -26,6 +26,7 @@ relURI upath pairs = URI {uriScheme = "",
                    uriFragment = ""}
 
 -- |Set the port number in the URI authority, creating it if necessary.
+setURIPort :: String -> String -> URI
 setURIPort port uri =
     uri {uriAuthority = Just auth'}
     where
@@ -39,7 +40,7 @@ parseURIQuery uri =
     case uriQuery uri of
       "" -> []
       '?' : attrs ->
-          map (second (unEscapeString . tail) . break (== '='))
+          map (second (unEscapeString . drop 1) . break (== '='))
                   (filter (/= "&") (groupBy (\ a b -> a /= '&' && b /= '&') attrs))
       x -> error $ "Invalid URI query: " ++ x
 

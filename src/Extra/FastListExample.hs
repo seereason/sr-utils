@@ -1,10 +1,10 @@
 {-# LANGUAGE DeriveDataTypeable, DeriveGeneric, OverloadedStrings, QuasiQuotes #-}
 {-# OPTIONS -Wno-missing-signatures #-}
+{-# OPTIONS -Wno-x-partial #-}
 
 module Extra.FastListExample where
 
 import Data.Data
-import Data.List (head, last)
 import Data.Map as Map
 import Data.String
 import Data.Text (pack, Text)
@@ -15,7 +15,7 @@ import GHC.Generics
 -- Note that you need to apply it to a type with several hundred
 -- constructors to see a clear improvement.
 
-newtype MyType = MyType Text deriving (Generic, Eq, Ord, Data, Typeable, Read, Show)
+newtype MyType = MyType Text deriving (Generic, Eq, Ord, Data, Read, Show) -- Typeable,
 instance IsString MyType where fromString = MyType . pack
 
 {-# INLINE mypairs #-}

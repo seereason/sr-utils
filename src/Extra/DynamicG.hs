@@ -90,7 +90,7 @@ deriving instance Constraints v => Typeable (Dyn v)
 
 -- | @since 2.01
 instance Show Dynamic where
-   showsPrec p (Dynamic t v) =
+   showsPrec p (Dynamic _t v) =
           showsPrec p v
           -- showString " :: " .
           -- showsPrec 0 t  .
@@ -137,22 +137,22 @@ fromDynamic (Dynamic t v)
   where rep = typeRep :: TypeRep a
 
 -- (f::(a->b)) `dynApply` (x::a) = (f a)::b
-dynApply :: forall ta tr. (Constraints ta, Constraints tr) => (ta -> tr) -> Dynamic -> Maybe Dynamic
-dynApply f (Dynamic ta' x)
-  | Just HRefl <- typeRep @ta `eqTypeRep` ta'
-  , Just HRefl <- typeRep @Type `eqTypeRep` typeRep @tr
-  = Just (Dynamic (typeRep @tr) (f x))
-dynApply _ _
-  = Nothing
+-- dynApply :: forall ta tr. (Constraints ta, Constraints tr) => (ta -> tr) -> Dynamic -> Maybe Dynamic
+-- dynApply f (Dynamic ta' x)
+--   | Just HRefl <- typeRep @ta `eqTypeRep` ta'
+--   , Just HRefl <- typeRep @Type `eqTypeRep` typeRep @tr
+--   = Just (Dynamic (typeRep @tr) (f x))
+-- dynApply _ _
+--   = Nothing
 
-dynApp :: forall ta tr. (Constraints ta, Constraints tr) => (ta -> tr) -> Dynamic -> Dynamic
-dynApp f x = case dynApply f x of
-               Just r -> r
-               Nothing -> errorWithoutStackTrace ("Type error in dynamic application.\n" ++
-                                                  "Can't apply f" ++
-                                                  " :: " ++ show (typeRep @ta) ++
-                                                  " -> " ++ show (typeRep @tr) ++
-                                                  " to argument " ++ show x)
+-- dynApp :: forall ta tr. (Constraints ta, Constraints tr) => (ta -> tr) -> Dynamic -> Dynamic
+-- dynApp f x = case dynApply f x of
+--                Just r -> r
+--                Nothing -> errorWithoutStackTrace ("Type error in dynamic application.\n" ++
+--                                                   "Can't apply f" ++
+--                                                   " :: " ++ show (typeRep @ta) ++
+--                                                   " -> " ++ show (typeRep @tr) ++
+--                                                   " to argument " ++ show x)
 
 dynTypeRep :: Dynamic -> SomeTypeRep
 dynTypeRep (Dynamic tr _) = SomeTypeRep tr

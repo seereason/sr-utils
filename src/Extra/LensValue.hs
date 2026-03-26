@@ -2,7 +2,7 @@
 -- non-empty (in fact singular) traversal of s.
 
 {-# LANGUAGE OverloadedLabels #-}
-{-# OPTIONS -Wall -Wno-redundant-constraints #-}
+{-# OPTIONS -Wall -Wno-redundant-constraints -Wno-unused-top-binds #-}
 
 module Extra.LensValue
   ( LensValue(.. {-_lens, _lval-})

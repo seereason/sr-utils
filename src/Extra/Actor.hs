@@ -20,7 +20,7 @@ import Data.Generics.Labels ()
 import Data.SafeCopy
 import Data.Serialize (Serialize(get, put))
 import Data.UserId
-import Data.Text
+import Data.Text hiding (show)
 import Extra.Except
 import GHC.Generics (Generic)
 import GHC.Stack (CallStack, {-getCallStack,-} prettyCallStack)

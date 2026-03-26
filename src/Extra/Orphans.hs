@@ -47,7 +47,7 @@ instance Typeable t => SafeCopy (Proxy t) where
       kind = base
       errorTypeName _ = "Data.Proxy.Proxy"
 
-#if 1
+#if 0
 deriving instance Generic Day
 deriving instance Generic UTCTime
 #else

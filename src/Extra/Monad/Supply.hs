@@ -4,6 +4,7 @@
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# OPTIONS -Wno-incomplete-uni-patterns -Wno-x-partial #-}
 
 -- | Support for computations which consume values from a (possibly infinite)
 -- supply. See <http://www.haskell.org/haskellwiki/New_monads/MonadSupply> for
