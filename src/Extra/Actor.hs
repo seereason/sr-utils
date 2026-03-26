@@ -48,7 +48,7 @@ instance HasIOException e => HasIOException (Either NoUser e) where ioException 
 data Actor =
     LoggedIn {_effective :: !UserId}
   | Sudo {_effective :: !UserId, _real :: !Actor}
-  deriving (Generic, Eq, Ord, Show, Typeable, Data)
+  deriving (Generic, Eq, Ord, Show, Data) -- Typeable,
 
 -- | The actual authenticated user, disregarding any sudo-ing that may
 -- have occurred.

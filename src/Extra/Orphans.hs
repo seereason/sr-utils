@@ -10,7 +10,6 @@ module Extra.Orphans where
 
 import Data.Graph.Inductive as G
 import Data.List (intercalate)
-import Data.Monoid ((<>))
 import Data.Proxy (Proxy(Proxy))
 import Data.SafeCopy (base, contain,
                       SafeCopy(errorTypeName, getCopy, kind, putCopy, version), safeGet, safePut)
@@ -29,7 +28,9 @@ import Data.UUID (UUID)
 import Data.UUID.V4 as UUID (nextRandom)
 import Data.UUID.Orphans ({-instance SafeCopy UUID-})
 import Extra.Orphans2 ()
+#if 0
 import GHC.Generics (Generic)
+#endif
 -- import GHC.Stack.Types
 import Instances.TH.Lift ()
 import Language.Haskell.TH (Loc(..), Ppr(ppr))
@@ -62,7 +63,7 @@ $(deriveLift ''UserId)
 $(deriveLift ''G.Gr)
 $(deriveLift ''G.NodeMap)
 
-instance Ppr UserId where ppr (UserId n) = ptext ("U" <> show n)
+instance Ppr UserId where ppr (UserId n) = ptext ("U" <> Prelude.show n)
 
 instance Arbitrary T.Text where
     arbitrary = T.pack <$> arbitrary

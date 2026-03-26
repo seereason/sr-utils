@@ -26,7 +26,7 @@ relURI upath pairs = URI {uriScheme = "",
                    uriFragment = ""}
 
 -- |Set the port number in the URI authority, creating it if necessary.
-setURIPort :: String -> String -> URI
+setURIPort :: String -> URI -> URI
 setURIPort port uri =
     uri {uriAuthority = Just auth'}
     where
@@ -70,6 +70,7 @@ formatURIQuery attrs = '?' : concat (intersperse "&" (map (\ (a, b) -> a ++ "=" 
 -- the URI query.  The isUnreserved predicate is the set of characters
 -- that can appear in a URI which don't have any special meaning.
 -- Everything else gets escaped.
+escapeURIForQueryValue :: String -> String
 escapeURIForQueryValue = escapeURIString isUnreserved
 
 #if 0

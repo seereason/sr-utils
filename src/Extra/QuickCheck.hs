@@ -1,3 +1,4 @@
+{-# OPTIONS -Wno-orphans #-}
 module Extra.QuickCheck
   ( throwResult
   ) where

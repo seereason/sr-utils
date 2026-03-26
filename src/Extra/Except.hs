@@ -36,7 +36,6 @@ import Control.Lens (Prism', review)
 import Control.Monad (MonadPlus(mplus, mzero))
 import Control.Monad.Catch
 import Control.Monad.Except (catchError, ExceptT, liftEither, MonadError, runExceptT, throwError, withExceptT)
-import Data.Monoid ((<>))
 import Data.Serialize
 import Data.Typeable (typeOf)
 #if !__GHCJS__

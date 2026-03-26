@@ -65,9 +65,11 @@ diffText (nameA, textA) (nameB, textB) =
 --   camelWords "aCamelCaseFOObar123" -> "A Camel Case FOObar123"
 camelWords :: String -> String
 camelWords s =
-    case groupBy (\ a b -> isUpper a == isUpper b) (dropWhile (== '_') s) of -- "aCamelCaseFOObar123"
-      (x : xs) -> concat $ capitalize x : map (\ (c : cs) -> if isUpper c then ' ' : c : cs else c : cs) xs
-      [] -> ""
+  case groupBy (\ a b -> isUpper a == isUpper b) (dropWhile (== '_') s) of -- "aCamelCaseFOObar123"
+    (x : xs) -> concat $ capitalize x : map sub xs
+    [] -> ""
+    where sub [] = []
+          sub (c:cs) = if isUpper c then ' ' : c : cs else c : cs
 
 #if !__GHCJS__
 -- Most of these fail.

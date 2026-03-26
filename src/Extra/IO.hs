@@ -16,7 +16,6 @@ module Extra.IO
 import Control.Exception as E (IOException, throw, try)
 import Control.Monad (when)
 import Control.Monad.Trans (liftIO, MonadIO)
-import Data.Monoid ((<>))
 import Data.Text as Text ({-length, take,-} Text)
 import Data.Text.IO as Text (readFile, writeFile)
 import Data.Time (getCurrentTime, diffUTCTime, getCurrentTime, NominalDiffTime)

@@ -14,6 +14,7 @@
 {-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TypeApplications #-}
+{-# OPTIONS -Wno-unused-top-binds #-}
 
 module Extra.Serialize
     ( DecodeError(..)
@@ -62,14 +63,14 @@ import Language.Haskell.TH (Dec, {-Loc(..),-} TypeQ, Q)
 -- Data.Typeable.Internal, a hidden module in base.
 instance SafeCopy TypeRep
 deriving instance Data TypeRep
-data DecodeError = DecodeError ByteString TypeRep String deriving (Generic, Eq, Ord, Typeable)
+data DecodeError = DecodeError ByteString TypeRep String deriving (Generic, Eq, Ord)
 #else
 newtype FakeTypeRep = FakeTypeRep String deriving (Generic, Eq, Ord, Serialize)
 instance SafeCopy FakeTypeRep
 fakeTypeRep :: forall a. Typeable a => Proxy a -> FakeTypeRep
 fakeTypeRep a = FakeTypeRep (show (typeRep a))
 
-data DecodeError = DecodeError ByteString FakeTypeRep String deriving (Generic, Eq, Ord, Typeable)
+data DecodeError = DecodeError ByteString FakeTypeRep String deriving (Generic, Eq, Ord)
 #endif
 
 instance Serialize DecodeError where get = safeGet; put = safePut
