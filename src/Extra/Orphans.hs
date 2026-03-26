@@ -30,7 +30,7 @@ import Data.UUID.V4 as UUID (nextRandom)
 import Data.UUID.Orphans ({-instance SafeCopy UUID-})
 import Extra.Orphans2 ()
 import GHC.Generics (Generic)
-import GHC.Stack.Types
+-- import GHC.Stack.Types
 import Instances.TH.Lift ()
 import Language.Haskell.TH (Loc(..), Ppr(ppr))
 import Language.Haskell.TH.Lift -- (deriveLift, deriveLiftMany)
@@ -38,7 +38,7 @@ import Language.Haskell.TH.PprLib (ptext)
 import Network.URI (URI(..), URIAuth(..), uriToString)
 import System.IO.Unsafe (unsafePerformIO)
 import Test.QuickCheck (Arbitrary(arbitrary), choose, elements, Gen, listOf, listOf1, resize)
-import Text.PrettyPrint.HughesPJClass ( Pretty(pPrint), text )
+-- import Text.PrettyPrint.HughesPJClass ( Pretty(pPrint), text )
 
 instance Typeable t => SafeCopy (Proxy t) where
       putCopy Proxy = contain (do { return () })

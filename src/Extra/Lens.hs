@@ -20,7 +20,6 @@ module Extra.Lens
 
 import Control.Lens
 import Data.Generics.Labels ()
-import Data.Typeable (Typeable)
 import GHC.Stack (HasCallStack)
 
 -- | This says we can obtain a value of type r from monad @m@.  It is
@@ -52,7 +51,7 @@ class HasLens1 s r k where
 -- instance.  This is necessary if you want a persistant value
 -- (Dyn has no Serialize instance) or because you already
 -- have a location (not in Dyn) where the value is stored.
-class Typeable s => HasLens s r where
+class HasLens s r where
   hasLens :: HasCallStack => Lens' s r
 
 -- | The 'nubBy' function generalized for any Cons instance.  Adapted
