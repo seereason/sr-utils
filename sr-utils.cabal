@@ -103,7 +103,7 @@ Library
     Extra.Text
     Extra.Time
     Extra.URI
-  if !impl(ghcjs)
+  if !impl(ghcjs) && !arch(javascript)
     Exposed-modules:
       Extra.THIO
     Build-Depends:
