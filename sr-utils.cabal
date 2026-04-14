@@ -1,5 +1,5 @@
 Name:           sr-utils
-Version:        1.113
+Version:        1.114
 License:        BSD3
 License-File:   COPYING
 Author:         David Fox
@@ -44,7 +44,6 @@ Library
     directory,
     exceptions,
     fgl,
-    filemanip,
     filepath,
     generic-data,
     generic-lens,
@@ -55,7 +54,6 @@ Library
     mmorph,
     mtl,
     pretty,
-    process,
     QuickCheck,
     safecopy,
     sr-errors,
@@ -68,7 +66,6 @@ Library
     th-orphans,
     time,
     unexceptionalio-trans,
-    unix,
     userid,
     uuid,
     uuid-orphans
@@ -88,8 +85,6 @@ Library
     Extra.FastList
     Extra.GenericMap
     Extra.Generics
-    Extra.HughesPJ
-    Extra.IO
     Extra.Lens
     Extra.LensValue
     Extra.LocalStorageEncode
@@ -98,16 +93,21 @@ Library
     Extra.Orphans2
     Extra.QuickCheck
     Extra.Serialize
-    Extra.SSH
-    Extra.Terminal
     Extra.Text
     Extra.Time
     Extra.URI
   if !impl(ghcjs)
     Exposed-modules:
+      Extra.HughesPJ
+      Extra.IO
+      Extra.SSH
+      Extra.Terminal
       Extra.THIO
     Build-Depends:
-      regex-tdfa
+      regex-tdfa,
+      process,
+      unix,
+      filemanip
 
   Other-Modules:
     Extra.FastListExample
