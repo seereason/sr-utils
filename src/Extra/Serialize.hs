@@ -48,14 +48,16 @@ import Data.Serialize
 -- import Data.Text.Lazy.Encoding as TLE
 -- import Data.Time (UTCTime(..), Day(ModifiedJulianDay), toModifiedJulianDay, DiffTime)
 import Data.Typeable (Typeable, typeRep)
-import Data.UUID.Orphans ()
--- import Data.UUID (UUID)
-import Data.UUID.Orphans ()
 import Extra.Orphans ()
 -- import Extra.Time (Zulu(..))
 import GHC.Generics (Generic)
 import Language.Haskell.TH (Dec, {-Loc(..),-} TypeQ, Q)
 -- import Network.URI (URI(..), URIAuth(..))
+
+#if !__GHCJS__
+-- import Data.UUID (UUID)
+import Data.UUID.Orphans ()
+#endif
 
 #if 0
 -- We can't make a Data instance for TypeRep because part of it is in

@@ -66,9 +66,7 @@ Library
     th-orphans,
     time,
     unexceptionalio-trans,
-    userid,
-    uuid,
-    uuid-orphans
+    userid
   C-Sources:         cbits/gwinsz.c
   Include-Dirs:        cbits
   Install-Includes:    gwinsz.h
@@ -107,7 +105,9 @@ Library
       regex-tdfa,
       process,
       unix,
-      filemanip
+      filemanip,
+      uuid,
+      uuid-orphans
 
   Other-Modules:
     Extra.FastListExample
