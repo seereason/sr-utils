@@ -41,10 +41,8 @@ Library
     cereal-text,
     containers,
     Diff >= 1,
-    directory,
     exceptions,
     fgl,
-    filepath,
     generic-data,
     generic-lens,
     hslogger,
@@ -70,6 +68,10 @@ Library
     userid,
     uuid-orphans,
     uuid-types
+  if !arch(javascript)
+    Build-Depends:
+      directory,
+      filepath
   C-Sources:         cbits/gwinsz.c
   Include-Dirs:        cbits
   Install-Includes:    gwinsz.h
