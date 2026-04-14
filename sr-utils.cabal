@@ -66,7 +66,9 @@ Library
     th-orphans,
     time,
     unexceptionalio-trans,
-    userid
+    userid,
+    uuid-orphans,
+    uuid-types
   C-Sources:         cbits/gwinsz.c
   Include-Dirs:        cbits
   Install-Includes:    gwinsz.h
@@ -106,8 +108,7 @@ Library
       process,
       unix,
       filemanip,
-      uuid,
-      uuid-orphans
+      uuid
 
   Other-Modules:
     Extra.FastListExample
