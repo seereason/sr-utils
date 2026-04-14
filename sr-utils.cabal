@@ -112,8 +112,3 @@ Library
   Other-Modules:
     Extra.FastListExample
 
-  if !impl(ghcjs) && !arch(javascript)
-    if flag(network-uri)
-      Build-Depends: network-uri >= 2.6
-    else
-      Build-Depends: network >= 2.4
