@@ -53,7 +53,6 @@ Library
     ListLike,
     mmorph,
     mtl,
-    network-uri >= 2.6,
     pretty,
     QuickCheck,
     safecopy,
@@ -67,9 +66,7 @@ Library
     th-orphans,
     time,
     unexceptionalio-trans,
-    userid,
-    uuid-orphans,
-    uuid-types
+    userid
   C-Sources:         cbits/gwinsz.c
   Include-Dirs:        cbits
   Install-Includes:    gwinsz.h
@@ -109,8 +106,14 @@ Library
       process,
       unix,
       filemanip,
-      uuid
+      uuid,
+      uuid-orphans
 
   Other-Modules:
     Extra.FastListExample
 
+  if !impl(ghcjs) && !arch(javascript)
+    if flag(network-uri)
+      Build-Depends: network-uri >= 2.6
+    else
+      Build-Depends: network >= 2.4
