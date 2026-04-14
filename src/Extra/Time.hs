@@ -19,7 +19,9 @@ import GHC.Read (expectP{-, readField-})
 import Language.Haskell.TH.Lift as Q (Lift(..))
 -- import Language.Haskell.TH.Syntax as Q
 import Text.Read (Lexeme(Ident{-, Punc-}), prec, parens, Read(..), {-readListDefault, readListPrecDefault, reset,-} step)
+
 #if !__GHCJS__
+import Language.Haskell.TH (Exp(..), mkName)
 import Test.QuickCheck
 #endif
 

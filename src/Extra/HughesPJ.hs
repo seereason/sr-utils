@@ -5,7 +5,7 @@ import Extra.Terminal
 import Text.PrettyPrint
 
 -- |render a Doc using the current terminal width
-renderWidth :: Doc -> IO String       
+renderWidth :: Doc -> IO String
 renderWidth doc =
     do columns <- return . fromMaybe 80 =<< getWidth
        return $ renderStyle (Style PageMode columns 1.0) doc
