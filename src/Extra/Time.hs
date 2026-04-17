@@ -16,8 +16,6 @@ import Data.Time
 import Extra.Orphans ()
 import GHC.Generics (Generic)
 import GHC.Read (expectP{-, readField-})
-import Language.Haskell.TH.Lift as Q (Lift(..))
--- import Language.Haskell.TH.Syntax as Q
 import Text.Read (Lexeme(Ident{-, Punc-}), prec, parens, Read(..), {-readListDefault, readListPrecDefault, reset,-} step)
 
 #if !__GHCJS__
@@ -80,7 +78,7 @@ myTimeDiffToString diff =
 
 -- | A version of UTCTime with a Show instance that returns a Haskell
 -- expression.
-newtype Zulu = Zulu {_utcTime :: UTCTime} deriving (Eq, Ord, Data, Generic, Lift)
+newtype Zulu = Zulu {_utcTime :: UTCTime} deriving (Eq, Ord, Data, Generic)
 deriving instance Serialize Zulu
 
 instance Read Zulu where
