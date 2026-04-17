@@ -8,7 +8,6 @@
 
 module Extra.Orphans where
 
-import Data.Graph.Inductive as G
 import Data.List (intercalate)
 import Data.Proxy (Proxy(Proxy))
 import Data.SafeCopy (base, contain,
@@ -72,9 +71,6 @@ deriving instance Generic URIAuth
 #endif
 
 $(deriveLift ''UserId)
-
-$(deriveLift ''G.Gr)
-$(deriveLift ''G.NodeMap)
 
 instance Ppr UserId where ppr (UserId n) = ptext ("U" <> Prelude.show n)
 

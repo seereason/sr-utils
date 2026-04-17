@@ -19,11 +19,6 @@ Build-Type:     Simple
 Cabal-Version:  >= 1.10
 Tested-With: GHC==8.0.2, GHC==8.2.2, GHC==8.4.4, GHC==8.6.5, GHC==8.8.4, GHC==8.10.2
 
-flag network-uri
-  Description: Get Network.URI from the network-uri package rather than the
-   full network package.
-  Default: True
-
 flag omit-serialize
   Description: Omit all the Serialize instances, on the assumption
    that we will use SafeCopy instances instead.
@@ -42,7 +37,6 @@ Library
     containers,
     Diff >= 1,
     exceptions,
-    fgl,
     generic-data,
     generic-lens,
     hslogger,
