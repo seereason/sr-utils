@@ -106,8 +106,6 @@ Library
       unix,
       filemanip,
       uuid
-  else
-    cpp-options: -D__GHCJS__=1
 
   Other-Modules:
     Extra.FastListExample

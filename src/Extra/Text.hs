@@ -9,7 +9,7 @@ module Extra.Text
     , describe
     , textshow
     , trunc
-#if !__GHCJS__
+#if !__GHCJS__ && !defined(javascript_HOST_ARCH)
     , tests
 #endif
     ) where
@@ -20,7 +20,7 @@ import Data.ListLike (groupBy)
 import Data.String (IsString)
 import Data.Text (split, Text, pack, unpack)
 import qualified Data.Text.Lazy as Lazy ( fromStrict, pack, Text, toStrict, unpack )
-#if !__GHCJS__
+#if !__GHCJS__ && !defined(javascript_HOST_ARCH)
 import Test.HUnit (assertEqual, Test(TestCase, TestList))
 #endif
 import qualified Text.PrettyPrint as HPJ
@@ -71,7 +71,7 @@ camelWords s =
     where sub [] = []
           sub (c:cs) = if isUpper c then ' ' : c : cs else c : cs
 
-#if !__GHCJS__
+#if !__GHCJS__ && !defined(javascript_HOST_ARCH)
 -- Most of these fail.
 tests :: Test
 tests =

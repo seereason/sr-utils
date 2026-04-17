@@ -24,7 +24,7 @@ module Extra.Except
     , IOException'(..)
     , MonadUIO
     , lyftIO
-#if !__GHCJS__
+#if !__GHCJS__ && !defined(javascript_HOST_ARCH)
     -- , logIOError
 #endif
     , module Control.Monad.Except
@@ -38,7 +38,7 @@ import Control.Monad.Catch
 import Control.Monad.Except (catchError, ExceptT, liftEither, MonadError, runExceptT, throwError, withExceptT)
 import Data.Serialize
 import Data.Typeable (typeOf)
-#if !__GHCJS__
+#if !__GHCJS__ && !defined(javascript_HOST_ARCH)
 --import Extra.Log (logException, Priority(ERROR))
 #endif
 import Foreign.C.Types (CInt(..))
@@ -111,7 +111,7 @@ instance Show IOException' where show (IOException' e) = "(IOException' " <> sho
 class HasErrorCall e where fromErrorCall :: ErrorCall -> e
 instance HasErrorCall ErrorCall where fromErrorCall = id
 
-#if !__GHCJS__
+#if !__GHCJS__ && !defined(javascript_HOST_ARCH)
 --logIOError :: (MonadIO m, MonadError e m) => m a -> m a
 --logIOError = handleError (\e -> liftIO ($logException ERROR (pure e)) >> throwError e)
 #endif

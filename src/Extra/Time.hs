@@ -18,7 +18,7 @@ import GHC.Generics (Generic)
 import GHC.Read (expectP{-, readField-})
 import Text.Read (Lexeme(Ident{-, Punc-}), prec, parens, Read(..), {-readListDefault, readListPrecDefault, reset,-} step)
 
-#if !__GHCJS__
+#if !__GHCJS__ && !defined(javascript_HOST_ARCH)
 import Language.Haskell.TH (Exp(..), mkName)
 import Test.QuickCheck
 #endif
@@ -96,7 +96,7 @@ instance IsString Zulu where
 $(makeLenses ''Zulu)
 instance SafeCopy Zulu where version = 1; kind = base
 
-#if !__GHCJS__
+#if !__GHCJS__ && !defined(javascript_HOST_ARCH)
 instance Arbitrary Zulu where arbitrary = Zulu <$> arbitrary
 #endif
 -- instance ParseTime Zulu
