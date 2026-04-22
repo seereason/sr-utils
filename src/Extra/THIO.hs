@@ -33,13 +33,9 @@ import Text.Regex.TDFA ((=~), MatchResult(MR))
 
 spliceModule :: Text -> [Dec] -> Q [Dec]
 spliceModule header decs = do
-#if MIN_VERSION_template_haskell(2,23,0)
-  pure decs
-#else
   splicesPath <- (\Loc{..} -> let (dir, file) = splitFileName loc_filename in dir <> "SplicesFor" <> file) <$> location
   addDependentFile splicesPath
   testAndWriteSplicesWithHeader header splicesPath decs
-#endif
 
 #if 0
 dropSuffix :: Eq a => [a] -> [a] -> [a]
