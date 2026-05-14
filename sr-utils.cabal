@@ -19,6 +19,11 @@ Build-Type:     Simple
 Cabal-Version:  >= 1.10
 Tested-With: GHC==8.0.2, GHC==8.2.2, GHC==8.4.4, GHC==8.6.5, GHC==8.8.4, GHC==8.10.2
 
+flag arch_javascript
+  description: Stand-in for arch(javascript). Remove if not using haskell.nix.
+  default: False
+  manual: True
+
 flag omit-serialize
   Description: Omit all the Serialize instances, on the assumption
    that we will use SafeCopy instances instead.
@@ -62,7 +67,7 @@ Library
     userid,
     uuid-orphans,
     uuid-types
-  if !arch(javascript)
+  if !flag(arch_javascript)
     Build-Depends:
       directory,
       filepath
@@ -93,7 +98,7 @@ Library
     Extra.Text
     Extra.Time
     Extra.URI
-  if !impl(ghcjs) && !arch(javascript)
+  if !impl(ghcjs) && !flag(arch_javascript)
     Exposed-modules:
       Extra.HughesPJ
       Extra.IO
@@ -109,4 +114,3 @@ Library
 
   Other-Modules:
     Extra.FastListExample
-
