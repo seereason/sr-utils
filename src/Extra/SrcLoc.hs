@@ -1,4 +1,4 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE OverloadedStrings, RecordWildCards #-}
 {-# OPTIONS -Wno-unused-imports #-}
 
 module Extra.SrcLoc
@@ -24,23 +24,29 @@ module Extra.SrcLoc
   , putStrLnLocs
 
     -- * Stack
+  , compactLocs
   , compactStack
-  -- , compactStackWith
-  -- , parentFunc
-
-  -- , thisFunction
-  -- , thisLocation, ici
-  -- , thisLocation'
-  -- , thisLocation''
+  , compactStackWith
+  , parentFunc
 
   , dropModuleFrames, dropPackageFrames
+
+  , loc
+  , here
+  , scrubLoc
+  , thisLocation
+  , ici
+  , thisLocation'
+  , thisLocation''
+  , thisFunction
   ) where
 
 import Control.Monad.Trans (MonadIO(liftIO))
-import Data.List (intersperse)
+import qualified Data.Function as Fn ((&))
+import Data.List as List (intersperse, uncons)
 import Data.String (IsString(fromString))
 import Extra.SrcLocOrphans ()
-import GHC.Stack (CallStack, callStack, fromCallSiteList, getCallStack, HasCallStack, prettyCallStack, SrcLoc(..))
+import GHC.Stack (callStack, CallStack, fromCallSiteList, getCallStack, HasCallStack, prettyCallStack, SrcLoc(..))
 import Text.PrettyPrint.HughesPJClass (prettyShow)
 
 -- From sr-log SeeReason.SrcLoc
@@ -179,3 +185,60 @@ compactLocs ((_, l) : more@((caller, _) : _)) =
     -- figure out which caller is missing the HasCallStack constraint.
     stacktail [l'] = [srcloccol l']
     stacktail (l' : more') = srcloc l' : stacktail more'
+
+compactStackWith :: forall s. (IsString s, Monoid s) => (forall a. [a] -> [a]) -> [(String, SrcLoc)] -> s
+compactStackWith f locs = compactStack ((f . drop 1) locs)
+
+-- | Return the name of the parent (caller) of function @child@.
+parentFunc :: HasCallStack => String -> String
+parentFunc child =
+  case (getStack Fn.&
+        dropWhile ((/= child) . fst) Fn.&
+        drop 1) of
+    ((x@(_ : _), _) : _) -> x
+    _ -> show getStack
+
+-- | This function creates a value which uniquely identifies the
+-- location where it is invoked.  Note that it is easy to make the
+-- mistake of using this inside a function, expecting unique keys
+-- anywhere the function is called but instead getting the same key
+-- everywhere.
+loc :: HasCallStack => SrcLoc
+loc = scrubLoc (snd here)
+
+here :: HasCallStack => (String, SrcLoc)
+here = head $ dropModuleFrames getStack
+
+-- | The srcLocPackage for a symbol can vary depending on whether we
+-- are using the compiler or the interpreter.  This erases the
+-- differences, not sure what risks this might entail.
+scrubLoc :: SrcLoc -> SrcLoc
+scrubLoc l = l {srcLocPackage = "", srcLocFile = ""}
+
+-- | Pretty print the location where this appears
+thisLocation :: (HasCallStack, IsString s) => s
+thisLocation = fromString $ prettyShow here
+
+-- | Adds the function name
+thisLocation' :: (HasCallStack, IsString s) => s
+thisLocation' = fromString $ prettyframe here
+  where
+    prettyframe (function, SrcLoc{..}) = srcLocModule <> "." <> function <> ":" <> Prelude.show srcLocStartLine
+
+-- | Adds the column number
+thisLocation'' :: (HasCallStack, IsString s) => s
+thisLocation'' = fromString $ prettyframe here
+  where
+    prettyframe (function, SrcLoc{..}) = srcLocModule <> "." <> function <> ":" <> Prelude.show srcLocStartLine <> ":" <> Prelude.show srcLocStartCol
+
+
+-- | Pretty print the location where this appears
+ici :: (HasCallStack, IsString s) => s
+ici = thisLocation
+
+-- | The function name appears in a pair with the location where it is
+-- called, not where it is located.  For this reason we drop one
+-- additional frame here, the one that contains the the function
+-- "thisFunction".
+thisFunction :: (HasCallStack, IsString s) => s
+thisFunction = maybe "???" (fromString . fst . fst) $ List.uncons $ tail $ dropModuleFrames getStack
