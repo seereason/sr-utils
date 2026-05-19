@@ -1,8 +1,8 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE InstanceSigs #-}
 {-# LANGUAGE UndecidableInstances #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 
 -- | Support for computations which consume values from a (possibly infinite)
@@ -106,6 +106,8 @@ instance (MonadCatch m, MonadIO m) => MonadCatch (SupplyT i m) where
 
 instance (MonadThrow m, MonadIO m) => MonadThrow (SupplyT i m) where
   throwM = liftIO . throw
+
+deriving instance (MonadMask m, MonadIO m) => MonadMask (SupplyT s m)
 
 -- | Get n supplies.
 supplies :: MonadSupply s m => Int -> m [s]
