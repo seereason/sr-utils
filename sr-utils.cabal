@@ -1,5 +1,5 @@
 Name:           sr-utils
-Version:        1.115
+Version:        1.116
 License:        BSD3
 License-File:   COPYING
 Author:         David Fox
@@ -90,11 +90,9 @@ Library
     Extra.LocalStorageEncode
     Extra.Monad.Supply
     Extra.Orphans
-    Extra.Orphans2
     Extra.QuickCheck
     Extra.Serialize
     Extra.SrcLoc
-    Extra.SrcLocOrphans
     Extra.Text
     Extra.Time
     Extra.URI

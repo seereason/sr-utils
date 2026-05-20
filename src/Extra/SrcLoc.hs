@@ -45,7 +45,7 @@ import Control.Monad.Trans (MonadIO(liftIO))
 import qualified Data.Function as Fn ((&))
 import Data.List as List (intersperse, uncons)
 import Data.String (IsString(fromString))
-import Extra.SrcLocOrphans ()
+import Extra.Orphans ()
 import GHC.Stack (callStack, CallStack, fromCallSiteList, getCallStack, HasCallStack, prettyCallStack, SrcLoc(..))
 import Text.PrettyPrint.HughesPJClass (prettyShow)
 
