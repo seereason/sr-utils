@@ -102,12 +102,13 @@ srcFunctionWithLineList ((_name, l0) : more) =
     go l [] = [fromString (srcLocModule l) <> ":" <> fromString (show (srcLocStartLine l))]
     go l ((name, site) : more) = srcFunction l name : go site more
 
-srcFunctionList :: (IsString s) => [(String, SrcLoc)] -> [s]
+srcFunctionList :: (IsString s, Semigroup s) => [(String, SrcLoc)] -> [s]
 srcFunctionList [] = []
-srcFunctionList ((_name, l) : more) =
-  {-fromString name :-} go l more
+srcFunctionList ((_name, l0) : more) =
+  {-fromString name :-} go l0 more
   where
-    go l [] = [fromString (srcLocModule l)]
+    -- In a complete stack this will be Ghci1 or similar
+    go l [] = [fromString (srcLocModule l) <> ":" <> fromString (show (srcLocStartLine l))]
     go l ((name, site) : more) = srcFunction l name : go site more
 
 srcFunctionWithLine :: (IsString s{-, Semigroup s-}) => SrcLoc -> String -> s
