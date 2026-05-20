@@ -1,5 +1,4 @@
 {-# LANGUAGE OverloadedStrings, RecordWildCards #-}
-{-# OPTIONS -Wno-unused-imports #-}
 
 module Extra.SrcLoc
   ( prettyLoc

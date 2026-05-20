@@ -5,8 +5,6 @@
 {-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# OPTIONS -Wno-orphans #-}
-{-# OPTIONS -Werror=unused-imports #-}
-{-# OPTIONS -Werror=redundant-constraints #-}
 
 module Extra.Orphans where
 
