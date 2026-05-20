@@ -102,10 +102,10 @@ srcFunctionWithLineList ((_name, l0) : more) =
     go l [] = [fromString (srcLocModule l) <> ":" <> fromString (show (srcLocStartLine l))]
     go l ((name, site) : more) = srcFunction l name : go site more
 
-srcFunctionList :: (IsString s, Semigroup s) => [(String, SrcLoc)] -> [s]
+srcFunctionList :: (IsString s) => [(String, SrcLoc)] -> [s]
 srcFunctionList [] = []
-srcFunctionList ((name, l) : more) =
-  fromString name : go l more
+srcFunctionList ((_name, l) : more) =
+  {-fromString name :-} go l more
   where
     go l [] = [fromString (srcLocModule l)]
     go l ((name, site) : more) = srcFunction l name : go site more
@@ -113,8 +113,8 @@ srcFunctionList ((name, l) : more) =
 srcFunctionWithLine :: (IsString s{-, Semigroup s-}) => SrcLoc -> String -> s
 srcFunctionWithLine l name = fromString (srcLocModule l <> ":" <> fromString name <> ":" <> fromString (show (srcLocStartLine l)))
 
-srcFunction :: (IsString s, Semigroup s) => SrcLoc -> String -> s
-srcFunction l name = fromString (srcLocModule l) <> "." <> fromString name
+srcFunction :: (IsString s{-, Semigroup s-}) => SrcLoc -> String -> s
+srcFunction l name = fromString (srcLocModule l <> ":" <> fromString name <> ":" <> fromString (show (srcLocStartLine l)))
 
 mintercalate :: Monoid s => s -> [s] -> s
 mintercalate x xs = mconcat (intersperse x xs)
