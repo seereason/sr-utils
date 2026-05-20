@@ -87,9 +87,9 @@ Library
     Extra.LocalStorageEncode
     Extra.Monad.Supply
     Extra.Orphans
-    Extra.Orphans2
     Extra.QuickCheck
     Extra.Serialize
+    Extra.SrcLoc
     Extra.Text
     Extra.Time
     Extra.URI
