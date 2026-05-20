@@ -186,13 +186,13 @@ instance Ppr (Type, Int32) where
 instance Ppr Int32 where ppr = ptext . show
 
 instance Ppr (Name, [Type]) where
-    ppr (name, params) = ppr (foldl1 AppT (ConT name : params))
+    ppr (name, params) = ppr (LL.foldl1 AppT (ConT name : params))
 
 pprPair :: (Ppr a, Ppr b) => (a, b) -> Doc
 pprPair (a, b) = hcat [ptext "(", ppr a, ptext ",", ppr b, ptext ")"]
 
 pprList :: [Doc] -> Doc
-pprList xs = hcat [ptext "[", hcat (intersperse (ptext ",") xs), ptext "]"]
+pprList xs = hcat [ptext "[", hcat (LL.intersperse (ptext ",") xs), ptext "]"]
 
 -- deriving instance Data CmdSpec
 
