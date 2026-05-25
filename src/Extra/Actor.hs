@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE DerivingVia #-}
 {-# LANGUAGE OverloadedLabels #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE TemplateHaskell #-}
@@ -22,6 +23,7 @@ import Data.Serialize (Serialize(get, put))
 import Data.UserId
 import Data.Text
 import Extra.Except
+import Extra.Serialize
 import GHC.Generics (Generic)
 import GHC.Stack (CallStack, {-getCallStack,-} prettyCallStack)
 
@@ -49,6 +51,7 @@ data Actor =
     LoggedIn {_effective :: !UserId}
   | Sudo {_effective :: !UserId, _real :: !Actor}
   deriving (Generic, Eq, Ord, Show, Typeable, Data)
+  deriving Serialize via (SafeCopySerialize Actor)
 
 -- | The actual authenticated user, disregarding any sudo-ing that may
 -- have occurred.
@@ -57,7 +60,9 @@ logged Sudo{..} = logged _real
 logged LoggedIn{..} = _effective
 
 instance SafeCopy Actor where version = 1
+#if 0
 instance Serialize Actor where get = safeGet; put = safePut
+#endif
 -- instance Value Actor where hops _ = []
 instance HasUserId Actor where userId = _effective
 

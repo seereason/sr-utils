@@ -8,6 +8,7 @@
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DerivingVia #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE ScopedTypeVariables #-}
@@ -18,7 +19,7 @@
 module Extra.Serialize
     ( DecodeError(..)
     , module Data.Serialize
-    , deriveSerializeViaSafeCopy
+    , SafeCopySerialize(SafeCopySerialize)
     , decodeAll
     -- , decode'
     , FakeTypeRep(..)
@@ -54,7 +55,7 @@ import Data.UUID.Orphans ()
 import Extra.Orphans ()
 -- import Extra.Time (Zulu(..))
 import GHC.Generics (Generic)
-import Language.Haskell.TH (Dec, {-Loc(..),-} TypeQ, Q)
+-- import Language.Haskell.TH (Dec, {-Loc(..),-} TypeQ, Q)
 -- import Network.URI (URI(..), URIAuth(..))
 
 #if 0
@@ -89,15 +90,16 @@ decodeAll b =
     Right (a, more) | B.null more -> Right a
     Right (_, more) -> Left ("decode " <> show b <> " failed to consume " <> show more)
 
--- | A Serialize instance based on safecopy.  This means that
+  -- | A Serialize instance based on safecopy.  This means that
 -- migrations will be performed upon deserialization, which is handy
 -- if the value is stored in the browser's local storage.  Thus, zero
 -- downtime upgrades!
-deriveSerializeViaSafeCopy :: TypeQ -> Q [Dec]
-deriveSerializeViaSafeCopy typ =
-    [d|instance Serialize $typ where
-          get = safeGet
-          put = safePut|]
+-- | @deriving via (SafeCopySerialize Foo) instance Serialize Foo@
+data newtype SafeCopySerialize a = SafeCopySerialize a
+
+instance SafeCopy a => Serialize (SafeCopySerialize a) where
+  get = SafeCopySerialize <$> safeGet
+  put (SafeCopySerialize a) = safePut a
 
 -- | Lift 'decode' into a monad and improve its error type
 decodeM :: forall a m. (MonadError DecodeError m, Serialize a, Typeable a) => ByteString -> m a
