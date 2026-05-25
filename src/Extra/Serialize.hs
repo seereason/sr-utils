@@ -95,7 +95,7 @@ decodeAll b =
 -- if the value is stored in the browser's local storage.  Thus, zero
 -- downtime upgrades!
 -- | @deriving via (SafeCopySerialize Foo) instance Serialize Foo@
-data newtype SafeCopySerialize a = SafeCopySerialize a
+newtype SafeCopySerialize a = SafeCopySerialize a
 
 instance SafeCopy a => Serialize (SafeCopySerialize a) where
   get = SafeCopySerialize <$> safeGet
