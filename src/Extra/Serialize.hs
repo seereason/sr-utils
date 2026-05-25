@@ -90,7 +90,7 @@ decodeAll b =
     Right (a, more) | B.null more -> Right a
     Right (_, more) -> Left ("decode " <> show b <> " failed to consume " <> show more)
 
-  -- | A Serialize instance based on safecopy.  This means that
+-- | A Serialize instance based on safecopy.  This means that
 -- migrations will be performed upon deserialization, which is handy
 -- if the value is stored in the browser's local storage.  Thus, zero
 -- downtime upgrades!
