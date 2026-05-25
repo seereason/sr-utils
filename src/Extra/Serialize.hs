@@ -94,7 +94,6 @@ decodeAll b =
 -- migrations will be performed upon deserialization, which is handy
 -- if the value is stored in the browser's local storage.  Thus, zero
 -- downtime upgrades!
--- | @deriving via (SafeCopySerialize Foo) instance Serialize Foo@
 newtype SafeCopySerialize a = SafeCopySerialize a
 
 instance SafeCopy a => Serialize (SafeCopySerialize a) where
