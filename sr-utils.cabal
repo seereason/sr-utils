@@ -102,6 +102,8 @@ Library
     Exposed-modules:
       Extra.HughesPJ
       Extra.IO
+      Extra.Process.Document
+      Extra.Process.Document.AsdtPath
       Extra.SSH
       Extra.Terminal
       Extra.THIO
