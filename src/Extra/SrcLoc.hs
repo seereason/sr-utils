@@ -11,7 +11,6 @@ module Extra.SrcLoc
   , siteFormat
   , nameFormat
   , callLocsWith
-  , callLocsWith
   , callLoc
   , callLocs
   , callFnsWith
@@ -69,7 +68,7 @@ srcloccol l = srcloc l <> ":" <> fromString (show (srcLocStartCol l))
 
 -- | Compactly format a source location with the function name and
 -- starting line number.
-srcframe :: (IsString s, Semigroup s) => (String, SrcLoc) -> s
+srcframe :: IsString s => (String, SrcLoc) -> s
 srcframe (function, l) =
   fromString (srcLocModule l <> ":" <>
               function <> ":" <>
@@ -81,8 +80,7 @@ srcframe (function, l) =
 -- we are formatting the locations using the function name from the
 -- current pair and the source location from the previous pair.
 callLocList ::
-  (IsString s, Semigroup s)
-  => (Maybe SrcLoc -> Maybe String -> [s])
+     (Maybe SrcLoc -> Maybe String -> [s])
   -> [(String, SrcLoc)] -> [s]
 callLocList _ [] = []
 callLocList fmt ((name0, site0) : locs) =
@@ -103,7 +101,7 @@ callLocsWith f = callLocsWithInternal (f . drop 3)
 callLoc :: (IsString s, Monoid s, HasCallStack) => s
 callLoc = callLocsWithInternal (take 1 . drop 3)
 
-callLocs :: (IsString s, Monoid s, HasCallStack) => HasCallStack => s
+callLocs :: (IsString s, Monoid s, HasCallStack) => s
 callLocs = callLocsWithInternal (drop 3)
 
 -- | Function names only, no line numbers
