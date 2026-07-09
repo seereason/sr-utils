@@ -2,8 +2,7 @@
 {-# OPTIONS -Wno-unused-imports #-}
 
 module Extra.SrcLoc
-  ( prettyLoc
-  , getStack
+  ( getStack
   , srcloc
   , srcloccol
   , srcframe
