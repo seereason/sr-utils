@@ -152,6 +152,9 @@ nameFormat Nothing (Just name) = [fromString name]
 nameFormat (Just site) Nothing = [fromString (srcLocModule site <> ":???")]
 nameFormat Nothing Nothing = []
 
+mintercalate :: Monoid s => s -> [s] -> s
+mintercalate x xs = mconcat (intersperse x xs)
+
 -- * From SeeReason.Log
 
 topLoc :: (IsString s, Monoid s, HasCallStack) => s
