@@ -1,18 +1,20 @@
 {-# LANGUAGE OverloadedStrings, RecordWildCards #-}
 
 module Extra.SrcLoc
-  ( prettyLoc
-  , getStack
+  ( getStack
   , srcloc
   , srcloccol
   , srcframe
 
-  -- , locAttr
-  , srcFunctions
-  , caller
-  , thisLoc
-  , srcFunctionList
-  , srcFunctionWithLineList
+  , callLocList
+  , siteFormat
+  , nameFormat
+  , callLocsWith
+  , callLoc
+  , callLocs
+  , callFnsWith
+  , callFn
+  , callFns
 
     -- From sr-log:SeeReason.Log
   -- , loc
@@ -50,71 +52,101 @@ import Text.PrettyPrint.HughesPJClass (prettyShow)
 
 -- From sr-log SeeReason.SrcLoc
 
--- | Verbosely format the location of the nth level up in a call stack
--- prettyLocN :: CallStack -> Int -> Maybe String
--- prettyLocN stack n = preview (to getCallStack . ix n . to (prettyLoc . snd)) stack
-
-prettyLoc :: SrcLoc -> String
-prettyLoc = prettyShow
-
 -- | The first element of the result will be the call to 'getStack' and
 -- the location from which it was called.
 getStack :: HasCallStack => [(String, SrcLoc)]
 getStack = getCallStack callStack
 
--- | Compactly format a source location
+-- | Compactly format a source location with starting line number
 srcloc :: (IsString s, Semigroup s) => SrcLoc -> s
 srcloc l = fromString (srcLocModule l) <> ":" <> fromString (show (srcLocStartLine l))
 
--- | With start column
+-- | Compactly format a source location with starting line number and column
 srcloccol :: (IsString s, Semigroup s) => SrcLoc -> s
 srcloccol l = srcloc l <> ":" <> fromString (show (srcLocStartCol l))
 
-srcframe :: (IsString s, Semigroup s) => (String, SrcLoc) -> s
+-- | Compactly format a source location with the function name and
+-- starting line number.
+srcframe :: IsString s => (String, SrcLoc) -> s
 srcframe (function, l) =
-  fromString (srcLocModule l) <> "." <> fromString function <> ":" <> fromString (show (srcLocStartLine l))
+  fromString (srcLocModule l <> ":" <>
+              function <> ":" <>
+              show (srcLocStartLine l))
 
--- from seereason Base.SrcLoc
-
--- Alderon
--- locAttr :: HasCallStack => (forall a. [a] -> [a]) -> Attribute
--- locAttr f = dataSafe_ "loc" $ compactStackWith (f . drop 1) getStack
-
-caller :: (IsString s, Monoid s, HasCallStack) => s
-caller = thisLoc 2
-
--- The drop eliminates the frame for getStack
-thisLoc :: (IsString s, Monoid s, HasCallStack) => Int -> s
-thisLoc n = mintercalate (fromString " <") $ srcFunctionList $ take n $ drop 1 getStack
-
-srcFunctions :: (IsString s, Monoid s) => [(String, SrcLoc)] -> s
-srcFunctions = mintercalate (fromString " <") . srcFunctionList
-
--- | The first name is the caller of 'srcFunctionList', typically
--- 'srcFunctions', 'caller' or 'locAttr', so drop it.
-srcFunctionWithLineList :: (IsString s, Semigroup s) => [(String, SrcLoc)] -> [s]
-srcFunctionWithLineList [] = []
-srcFunctionWithLineList ((_name, l0) : more) =
-  {-fromString name :-} go l0 more
+-- | Format the call stack elements.  In each pair, the function name
+-- is what is being called at the call site.  Therefore, the function
+-- we are calling from is the name in the previous pair.  That is why
+-- we are formatting the locations using the function name from the
+-- current pair and the source location from the previous pair.
+callLocList ::
+     (Maybe SrcLoc -> Maybe String -> [s])
+  -> [(String, SrcLoc)] -> [s]
+callLocList _ [] = []
+callLocList fmt ((name0, site0) : locs) =
+  fmt Nothing (Just name0) <> go site0 locs
   where
-    -- In a complete stack this will be Ghci1 or similar
-    go l [] = [fromString (srcLocModule l) <> ":" <> fromString (show (srcLocStartLine l))]
-    go l ((name, site) : more) = srcFunction l name : go site more
+    go site [] = fmt (Just site) Nothing
+    go site1 ((name, site2) : more) = fmt (Just site1) (Just name) <> go site2 more
 
-srcFunctionList :: (IsString s, Semigroup s) => [(String, SrcLoc)] -> [s]
-srcFunctionList [] = []
-srcFunctionList ((_name, l0) : more) =
-  {-fromString name :-} go l0 more
-  where
-    -- In a complete stack this will be Ghci1 or similar
-    go l [] = [fromString (srcLocModule l) <> ":" <> fromString (show (srcLocStartLine l))]
-    go l ((name, site) : more) = srcFunction l name : go site more
+callLocsWithInternal :: (IsString s, Monoid s, HasCallStack) => ([s] -> [s]) -> s
+callLocsWithInternal f =
+  case f (callLocList siteFormat getStack) of
+    [] -> "No call stack"
+    xs -> mintercalate " <" xs
 
-srcFunctionWithLine :: (IsString s{-, Semigroup s-}) => SrcLoc -> String -> s
-srcFunctionWithLine l name = fromString (srcLocModule l <> ":" <> fromString name <> ":" <> fromString (show (srcLocStartLine l)))
+callLocsWith :: (IsString s, Monoid s, HasCallStack) => ([s] -> [s]) -> s
+callLocsWith f = callLocsWithInternal (f . drop 3)
 
-srcFunction :: (IsString s{-, Semigroup s-}) => SrcLoc -> String -> s
-srcFunction l name = fromString (srcLocModule l <> ":" <> fromString name <> ":" <> fromString (show (srcLocStartLine l)))
+callLoc :: (IsString s, Monoid s, HasCallStack) => s
+callLoc = callLocsWithInternal (take 1 . drop 3)
+
+callLocs :: (IsString s, Monoid s, HasCallStack) => s
+callLocs = callLocsWithInternal (drop 3)
+
+-- | Function names only, no line numbers
+callFnsWithInternal :: (IsString s, Monoid s, HasCallStack) => ([s] -> [s]) -> s
+callFnsWithInternal f =
+  case f (callLocList nameFormat getStack) of
+    [] -> "No call stack"
+    xs -> mintercalate " <" $ xs
+
+callFnsWith :: (IsString s, Monoid s, HasCallStack) => ([s] -> [s]) -> s
+callFnsWith f = callFnsWithInternal (f . drop 3)
+
+callFn :: (IsString s, Monoid s, HasCallStack) => s
+callFn = callFnsWithInternal (take 1 . drop 3)
+
+callFns :: HasCallStack => String
+callFns = callFnsWithInternal (drop 3)
+
+siteFormat :: IsString s => Maybe SrcLoc -> Maybe String -> [s]
+siteFormat (Just site) (Just name) =
+  [fromString (srcLocModule site <> ":" <>
+               name <> ":" <>
+               show (srcLocStartLine site) <> ":" <>
+               show (srcLocStartCol site))]
+siteFormat Nothing (Just name) =
+  [fromString name]
+siteFormat (Just site) Nothing =
+  [fromString (srcLocModule site <> ":" <>
+               "???" <> ":" <>
+               show (srcLocStartLine site) <> ":" <>
+               show (srcLocStartCol site))]
+siteFormat Nothing Nothing =
+  []
+
+-- | siteFormat without the function name.
+_topFormat :: IsString s => SrcLoc -> s
+_topFormat site =
+  fromString (srcLocModule site <> ":" <>
+              show (srcLocStartLine site) <> ":" <>
+              show (srcLocStartCol site))
+
+nameFormat :: IsString s => Maybe SrcLoc -> Maybe String -> [s]
+nameFormat (Just site) (Just name) = [fromString (srcLocModule site <> ":" <> name)]
+nameFormat Nothing (Just name) = [fromString name]
+nameFormat (Just site) Nothing = [fromString (srcLocModule site <> ":???")]
+nameFormat Nothing Nothing = []
 
 mintercalate :: Monoid s => s -> [s] -> s
 mintercalate x xs = mconcat (intersperse x xs)

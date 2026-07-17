@@ -27,8 +27,16 @@ import GHC.Stack (HasCallStack)
 -- reader monad.  These classes really belong in a module called
 -- Extra.Has, they are more general than HasLens.  (I'm not sure these
 -- are a good idea, they confused me when I first tried them. -dsf)
+#if 1
 class Monad m => HasM r m where hasM :: m r
 class Monad m => HasM1 r m k where hasM1 :: k -> m r
+#else
+-- dumbed down versions of HasM and HasM1 in preparation for removal
+type HasM a m = (MonadReader r m, HasLens r a)
+hasM = view (hasLens @r @a)
+type HasM1 a m k = (MonadReader r m, HasLens r (Map k a), Default a)
+hasM1 r m k = view (hasLens @r @(Map k a) . at k . non def)
+#endif
 
 viewM :: HasM r m => Getter r a -> m a
 viewM lns = view lns <$> hasM
