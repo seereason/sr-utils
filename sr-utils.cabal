@@ -1,5 +1,5 @@
 Name:           sr-utils
-Version:        2.1.2
+Version:        2.2
 License:        BSD3
 License-File:   COPYING
 Author:         David Fox
@@ -95,6 +95,7 @@ Library
     Extra.QuickCheck
     Extra.Serialize
     Extra.SrcLoc
+    Extra.SrcLocIO
     Extra.Text
     Extra.Time
     Extra.URI
