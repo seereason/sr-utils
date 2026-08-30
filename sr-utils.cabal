@@ -1,5 +1,5 @@
 Name:           sr-utils
-Version:        2.2
+Version:        2.3
 License:        BSD3
 License-File:   COPYING
 Author:         David Fox
@@ -112,6 +112,15 @@ Library
       unix,
       filemanip,
       uuid
+
+  if !impl(ghcjs)
+    if impl(ghc < 9)
+      -- Only ghc8 native should saves splices, ghc9 outputs a
+      -- different format and the ghc9 javascript back end doesn't
+      -- have the template haskell slowness problem
+      cpp-options: -DSAVE_SPLICES=1
+    else
+      cpp-options: -DSAVE_SPLICES=0
 
   Other-Modules:
     Extra.FastListExample
