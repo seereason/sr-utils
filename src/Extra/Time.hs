@@ -19,7 +19,6 @@ import GHC.Read (expectP{-, readField-})
 import Text.Read (Lexeme(Ident{-, Punc-}), prec, parens, Read(..), {-readListDefault, readListPrecDefault, reset,-} step)
 
 #if !__GHCJS__ && !defined(javascript_HOST_ARCH)
-import Language.Haskell.TH (Exp(..), mkName)
 import Test.QuickCheck
 #endif
 

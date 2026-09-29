@@ -1,6 +1,8 @@
 -- | Version of Extra.SrcLoc that pretends the getStack function is in
 -- the MonadIO.  This is to ease the transition to using the new
--- backtrace mechanism in Control.Exception.Backtrace.
+-- backtrace mechanism in Control.Exception.Backtrace.  Update: this
+-- mechanism does not work for the javascript compilers, so making
+-- this a native only package.
 
 {-# LANGUAGE LambdaCase, OverloadedStrings, RecordWildCards #-}
 

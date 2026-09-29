@@ -1,6 +1,7 @@
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DeriveLift #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE TemplateHaskell #-}
@@ -29,11 +30,9 @@ import Data.UserId (UserId(..))
 import GHC.Generics (Generic)
 import GHC.Stack (SrcLoc(..))
 import GHC.Stack.Types (CallStack(..))
-import Instances.TH.Lift ()
 import Language.Haskell.TH
-import Language.Haskell.TH.Lift
 import Language.Haskell.TH.PprLib (Doc, hcat, ptext, vcat)
-import Language.Haskell.TH.Syntax (ModName, NameFlavour, OccName, PkgName)
+import Language.Haskell.TH.Syntax (Lift, ModName, NameFlavour, OccName, PkgName)
 import Network.URI (URI(..), URIAuth(..), uriToString)
 import Prelude hiding (concat, foldl1)
 import System.IO.Unsafe (unsafePerformIO)
@@ -73,7 +72,7 @@ deriving instance Generic UTCTime
 deriving instance Generic URIAuth
 #endif
 
-$(deriveLift ''UserId)
+deriving instance Lift UserId
 
 instance Ppr UserId where ppr (UserId n) = ptext ("U" <> Prelude.show n)
 
