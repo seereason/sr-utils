@@ -40,7 +40,7 @@ import System.Log.Logger (Priority(..))
 import Test.QuickCheck (Arbitrary(arbitrary), choose, elements, Gen, listOf, listOf1, resize)
 import Text.PrettyPrint.HughesPJClass (Pretty(pPrint), text)
 
-#if !__GHCJS__ && !defined(javascript_HOST_ARCH)
+#if !__GHCJS__ && !(defined(javascript_HOST_ARCH) || defined(wasm32_HOST_ARCH))
 import Data.UUID.V4 as UUID (nextRandom)
 
 instance Arbitrary UUID where
