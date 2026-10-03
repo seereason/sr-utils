@@ -1,10 +1,9 @@
-{-# LANGUAGE OverloadedStrings, RecordWildCards #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 module Extra.SrcLoc
   ( getStack
   , srcloc
   , srcloccol
-  , srcframe
 
   , callLocList
   , siteFormat
@@ -18,7 +17,6 @@ module Extra.SrcLoc
 
     -- From sr-log:SeeReason.Log
   -- , loc
-  , srclocList
   , srcfunloc
   , srclocs
   , putStrLnLoc
@@ -35,26 +33,31 @@ module Extra.SrcLoc
   , loc
   , here
   , scrubLoc
-  , thisLocation
-  , ici
-  , thisLocation'
-  , thisLocation''
   , thisFunction
   ) where
 
+import Control.Lens (preview, ix)
 import Control.Monad.Trans (MonadIO(liftIO))
 import qualified Data.Function as Fn ((&))
 import Data.List as List (intersperse, uncons)
 import Data.String (IsString(fromString))
-import Extra.Orphans ()
-import GHC.Stack (callStack, CallStack, fromCallSiteList, getCallStack, HasCallStack, prettyCallStack, SrcLoc(..))
-import Text.PrettyPrint.HughesPJClass (prettyShow)
+import GHC.Stack (callStack, CallStack, getCallStack, HasCallStack, SrcLoc(..))
 
 -- From sr-log SeeReason.SrcLoc
 
--- | The first element of the result will be the call to 'getStack' and
--- the location from which it was called.
-getStack :: HasCallStack => [(String, SrcLoc)]
+-- | This pair contains the name of a called function and location
+-- in the source code from which that call occurs.  If you have a
+-- stack of these, the second element will be the caller of the
+-- first element.  Thus, the second element is the name of the
+-- function that contained the call the first and the location
+-- from which it was called.
+type Call = (String, SrcLoc)
+
+-- | The first element of the result of `getStack` will be the call
+-- to 'getStack' itself, and location from which it was called.  The
+-- next element will be the name of the function that called
+-- 'getStack'.
+getStack :: HasCallStack => [Call]
 getStack = getCallStack callStack
 
 -- | Compactly format a source location with starting line number
@@ -65,14 +68,6 @@ srcloc l = fromString (srcLocModule l) <> ":" <> fromString (show (srcLocStartLi
 srcloccol :: (IsString s, Semigroup s) => SrcLoc -> s
 srcloccol l = srcloc l <> ":" <> fromString (show (srcLocStartCol l))
 
--- | Compactly format a source location with the function name and
--- starting line number.
-srcframe :: IsString s => (String, SrcLoc) -> s
-srcframe (function, l) =
-  fromString (srcLocModule l <> ":" <>
-              function <> ":" <>
-              show (srcLocStartLine l))
-
 -- | Format the call stack elements.  In each pair, the function name
 -- is what is being called at the call site.  Therefore, the function
 -- we are calling from is the name in the previous pair.  That is why
@@ -80,7 +75,7 @@ srcframe (function, l) =
 -- current pair and the source location from the previous pair.
 callLocList ::
      (Maybe SrcLoc -> Maybe String -> [s])
-  -> [(String, SrcLoc)] -> [s]
+  -> [Call] -> [s]
 callLocList _ [] = []
 callLocList fmt ((name0, site0) : locs) =
   fmt Nothing (Just name0) <> go site0 locs
@@ -113,6 +108,9 @@ callFnsWithInternal f =
 callFnsWith :: (IsString s, Monoid s, HasCallStack) => ([s] -> [s]) -> s
 callFnsWith f = callFnsWithInternal (f . drop 3)
 
+-- | This depends on the exact calling structure that results in the
+-- caller being three positions down the stack: `callFn ->
+-- callFnsWithInternal -> getStack`.
 callFn :: (IsString s, Monoid s, HasCallStack) => s
 callFn = callFnsWithInternal (take 1 . drop 3)
 
@@ -166,6 +164,7 @@ putStrLnLocs :: (MonadIO m, HasCallStack) => Int -> String -> m ()
 putStrLnLocs n msg = liftIO $ putStrLn (msg <> " (" <> topLocs n <> ")")
 
 -- | Compactly format a call stack.
+{-# DEPRECATED srclocs "\\_stack -> callLocs  -- callLocs reads the implicit callStack, so the call site needs HasCallStack" #-}
 srclocs :: (IsString s, Monoid s) => CallStack -> s
 -- The space before the arrow allows the console to add line breaks.
 -- The space after is omitted to make these line breaks more
@@ -183,7 +182,7 @@ srcfunloc l f = fromString (srcLocModule l) <> "." <> f <> ":" <> fromString (sh
 
 -- | Drop the first element of a call stack and all subsequent frames
 -- from the same module.
-dropModuleFrames :: [(String, SrcLoc)] -> [(String, SrcLoc)]
+dropModuleFrames :: [Call] -> [Call]
 dropModuleFrames [] = []
 dropModuleFrames (frame1 : frames) =
   dropWhile (\frame ->
@@ -193,7 +192,7 @@ dropModuleFrames (frame1 : frames) =
 -- | Drop the first element of a call stack and all subsequent frames
 -- from the same package.  Don't use this in the interpeter, the
 -- package is always main.
-dropPackageFrames :: [(String, SrcLoc)] -> [(String, SrcLoc)]
+dropPackageFrames :: [Call] -> [Call]
 dropPackageFrames [] = []
 dropPackageFrames (frame1 : frames) =
   dropWhile (\frame ->
@@ -201,10 +200,11 @@ dropPackageFrames (frame1 : frames) =
 
 -- | Stack with main last.  Bottom frame includes the function name.
 -- Top frame includes the column number.
-compactStack :: forall s. (IsString s, Monoid s) => [(String, SrcLoc)] -> s
+{-# DEPRECATED compactStack "\\_stack -> callLocs  -- or callLocsWith f, whose f transforms the formatted strings rather than the frames; a caller that filters on SrcLoc fields has no equivalent and needs rewriting" #-}
+compactStack :: forall s. (IsString s, Monoid s) => [Call] -> s
 compactStack = mconcat . intersperse (" < " :: s) . compactLocs
 
-compactLocs :: forall s. (IsString s, Monoid s) => [(String, SrcLoc)] -> [s]
+compactLocs :: forall s. (IsString s, Monoid s) => [Call] -> [s]
 compactLocs [] = ["(no CallStack)"]
 compactLocs [(callee, l)] = [fromString callee, srcloccol l]
 compactLocs [(_, l), (caller, _)] = [srcloccol l <> "." <> fromString caller]
@@ -218,7 +218,7 @@ compactLocs ((_, l) : more@((caller, _) : _)) =
     stacktail [l'] = [srcloccol l']
     stacktail (l' : more') = srcloc l' : stacktail more'
 
-compactStackWith :: forall s. (IsString s, Monoid s) => (forall a. [a] -> [a]) -> [(String, SrcLoc)] -> s
+compactStackWith :: forall s. (IsString s, Monoid s) => (forall a. [a] -> [a]) -> [Call] -> s
 compactStackWith f locs = compactStack ((f . drop 1) locs)
 
 -- | Return the name of the parent (caller) of function @child@.
@@ -238,7 +238,7 @@ parentFunc child =
 loc :: HasCallStack => SrcLoc
 loc = scrubLoc (snd here)
 
-here :: HasCallStack => (String, SrcLoc)
+here :: HasCallStack => Call
 here = head $ dropModuleFrames getStack
 
 -- | The srcLocPackage for a symbol can vary depending on whether we
@@ -247,30 +247,37 @@ here = head $ dropModuleFrames getStack
 scrubLoc :: SrcLoc -> SrcLoc
 scrubLoc l = l {srcLocPackage = "", srcLocFile = ""}
 
--- | Pretty print the location where this appears
-thisLocation :: (HasCallStack, IsString s) => s
-thisLocation = fromString $ prettyShow here
-
--- | Adds the function name
-thisLocation' :: (HasCallStack, IsString s) => s
-thisLocation' = fromString $ prettyframe here
-  where
-    prettyframe (function, SrcLoc{..}) = srcLocModule <> "." <> function <> ":" <> Prelude.show srcLocStartLine
-
--- | Adds the column number
-thisLocation'' :: (HasCallStack, IsString s) => s
-thisLocation'' = fromString $ prettyframe here
-  where
-    prettyframe (function, SrcLoc{..}) = srcLocModule <> "." <> function <> ":" <> Prelude.show srcLocStartLine <> ":" <> Prelude.show srcLocStartCol
-
-
--- | Pretty print the location where this appears
-ici :: (HasCallStack, IsString s) => s
-ici = thisLocation
 
 -- | The function name appears in a pair with the location where it is
 -- called, not where it is located.  For this reason we drop one
 -- additional frame here, the one that contains the the function
 -- "thisFunction".
+{-# DEPRECATED thisFunction "callFn  -- callFn includes the module name" #-}
 thisFunction :: (HasCallStack, IsString s) => s
 thisFunction = maybe "???" (fromString . fst . fst) $ List.uncons $ tail $ dropModuleFrames getStack
+
+-- [("getStack",
+--   SrcLoc {srcLocPackage = "interactive-session", srcLocModule = "Extra.SrcLoc",
+--           srcLocFile = "src/Extra/SrcLoc.hs",
+--           srcLocStartLine = 286, srcLocStartCol = 25, srcLocEndLine = 286, srcLocEndCol = 33}),
+--  ("called",
+--   SrcLoc {srcLocPackage = "interactive-session", srcLocModule = "Extra.SrcLoc",
+--           srcLocFile = "src/Extra/SrcLoc.hs",
+--           srcLocStartLine = 283, srcLocStartCol = 10, srcLocEndLine = 283, srcLocEndCol = 16}),
+--  ("caller",
+--   SrcLoc {srcLocPackage = "interactive-session", srcLocModule = "Extra.SrcLoc",
+--           srcLocFile = "src/Extra/SrcLoc.hs",
+--           srcLocStartLine = 280, srcLocStartCol = 8, srcLocEndLine = 280, srcLocEndCol = 14}),
+--  ("test",
+--   SrcLoc {srcLocPackage = "interactive", srcLocModule = "Ghci1",
+--           srcLocFile = "<interactive>",
+--           srcLocStartLine = 7, srcLocStartCol = 1, srcLocEndLine = 7, srcLocEndCol = 5})]
+
+test :: HasCallStack => IO ()
+test = caller
+
+caller :: HasCallStack => IO ()
+caller = called
+
+called :: HasCallStack => IO ()
+called = putStrLn (show getStack)
