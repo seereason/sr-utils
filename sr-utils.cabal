@@ -1,5 +1,5 @@
 Name:           sr-utils
-Version:        2.3.1
+Version:        2.4
 License:        BSD3
 License-File:   COPYING
 Author:         David Fox
@@ -100,7 +100,6 @@ Library
       Extra.HughesPJ
       Extra.IO
       Extra.SSH
-      Extra.SrcLocIO
       Extra.Terminal
       Extra.THIO
     Build-Depends:

@@ -1,13 +1,12 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE OverloadedStrings, RecordWildCards #-}
 
 module Extra.SrcLoc
   ( getStack
   , srcloc
   , srcloccol
 
-  , callLocList
-  , siteFormat
-  , nameFormat
+  , Call(..)
+  , calls
   , callLocsWith
   , callLoc
   , callLocs
@@ -36,11 +35,11 @@ module Extra.SrcLoc
   , thisFunction
   ) where
 
-import Control.Lens (preview, ix)
 import Control.Monad.Trans (MonadIO(liftIO))
 import qualified Data.Function as Fn ((&))
 import Data.List as List (intersperse, uncons)
 import Data.String (IsString(fromString))
+import GHC.Generics (Generic)
 import GHC.Stack (callStack, CallStack, getCallStack, HasCallStack, SrcLoc(..))
 
 -- From sr-log SeeReason.SrcLoc
@@ -51,14 +50,33 @@ import GHC.Stack (callStack, CallStack, getCallStack, HasCallStack, SrcLoc(..))
 -- first element.  Thus, the second element is the name of the
 -- function that contained the call the first and the location
 -- from which it was called.
-type Call = (String, SrcLoc)
+data Call =
+  Call
+  { callee_ :: String        -- ^ Function being called at site_
+  , site_ :: SrcLoc          -- ^ Site of call
+  , caller_ :: Maybe String  -- ^ Function containing site_
+  } deriving (Show, Eq, Generic)
+
+-- | [Call] is just like [(String, SrcLoc)] except that the caller of each
+-- element is equal to the callee of the next.
+calls :: [(String, SrcLoc)] -> [Call]
+calls stack =
+  case stack of
+    [] -> []
+    (top : more) -> go top more
+  where
+    go :: (String, SrcLoc) -> [(String, SrcLoc)] -> [Call]
+    go (callee, site) [] = [Call callee site Nothing]
+    -- invariant: caller_ is a Just iff there is another element
+    go (callee, site) (next@(caller, _) : more) =
+      Call callee site (Just caller) : go next more
 
 -- | The first element of the result of `getStack` will be the call
 -- to 'getStack' itself, and location from which it was called.  The
 -- next element will be the name of the function that called
 -- 'getStack'.
 getStack :: HasCallStack => [Call]
-getStack = getCallStack callStack
+getStack = calls (getCallStack callStack)
 
 -- | Compactly format a source location with starting line number
 srcloc :: (IsString s, Semigroup s) => SrcLoc -> s
@@ -73,65 +91,84 @@ srcloccol l = srcloc l <> ":" <> fromString (show (srcLocStartCol l))
 -- we are calling from is the name in the previous pair.  That is why
 -- we are formatting the locations using the function name from the
 -- current pair and the source location from the previous pair.
-callLocList ::
-     (Maybe SrcLoc -> Maybe String -> [s])
-  -> [Call] -> [s]
-callLocList _ [] = []
-callLocList fmt ((name0, site0) : locs) =
-  fmt Nothing (Just name0) <> go site0 locs
+stackInternal ::
+  forall s. HasCallStack
+  => (Call -> [s])
+     -- ^ Renders the innermost frame's callee.  That frame is the one
+     -- thing a stack holds with no site of its own -- the name of what
+     -- was called, with nowhere to say it was called from.
+  -> (Call -> [s])
+     -- ^ Renders one frame: the site, and the function containing it.
+  -> ([s] -> [s])
+  -> [s]
+stackInternal doCallee doSite f =
+  f (format getStack)
   where
-    go site [] = fmt (Just site) Nothing
-    go site1 ((name, site2) : more) = fmt (Just site1) (Just name) <> go site2 more
+    -- Each Call carries the function its site sits inside, so a frame
+    -- renders from itself alone and the traversal is a plain fold.
+    -- 'calls' establishes that caller_ is a Just exactly when there is
+    -- a following element, so the outermost frame comes out with no
+    -- caller name without needing a case of its own.  concatMap rather
+    -- than fmap because the renderers return lists.
+    format :: [Call] -> [s]
+    format [] = []
+    format cs@(c : _) = doCallee c <> concatMap doSite cs
+
+internalDrop = drop 4
 
 callLocsWithInternal :: (IsString s, Monoid s, HasCallStack) => ([s] -> [s]) -> s
-callLocsWithInternal f =
-  case f (callLocList siteFormat getStack) of
-    [] -> "No call stack"
-    xs -> mintercalate " <" xs
+callLocsWithInternal f = stackFormat (stackInternal calleeName siteFormat f)
 
 callLocsWith :: (IsString s, Monoid s, HasCallStack) => ([s] -> [s]) -> s
-callLocsWith f = callLocsWithInternal (f . drop 3)
+callLocsWith f = callLocsWithInternal (f . internalDrop)
 
 callLoc :: (IsString s, Monoid s, HasCallStack) => s
-callLoc = callLocsWithInternal (take 1 . drop 3)
+callLoc = callLocsWithInternal (take 1 . internalDrop)
 
 callLocs :: (IsString s, Monoid s, HasCallStack) => s
-callLocs = callLocsWithInternal (drop 3)
+callLocs = callLocsWithInternal (internalDrop)
 
 -- | Function names only, no line numbers
 callFnsWithInternal :: (IsString s, Monoid s, HasCallStack) => ([s] -> [s]) -> s
-callFnsWithInternal f =
-  case f (callLocList nameFormat getStack) of
-    [] -> "No call stack"
-    xs -> mintercalate " <" $ xs
+callFnsWithInternal f = stackFormat (stackInternal calleeName nameFormat f)
+
+stackFormat :: (IsString a, Monoid a, HasCallStack) => [a] -> a
+stackFormat [] = "No call stack"
+stackFormat xs = mintercalate " <" xs
 
 callFnsWith :: (IsString s, Monoid s, HasCallStack) => ([s] -> [s]) -> s
-callFnsWith f = callFnsWithInternal (f . drop 3)
+callFnsWith f = callFnsWithInternal (f . internalDrop)
 
 -- | This depends on the exact calling structure that results in the
 -- caller being three positions down the stack: `callFn ->
 -- callFnsWithInternal -> getStack`.
 callFn :: (IsString s, Monoid s, HasCallStack) => s
-callFn = callFnsWithInternal (take 1 . drop 3)
+callFn = callFnsWithInternal (take 1 . internalDrop)
 
 callFns :: HasCallStack => String
-callFns = callFnsWithInternal (drop 3)
+callFns = callFnsWithInternal (internalDrop)
 
-siteFormat :: IsString s => Maybe SrcLoc -> Maybe String -> [s]
-siteFormat (Just site) (Just name) =
+-- | The innermost frame of a stack: the name of the function being
+-- called, with no site, because a stack says where each call was made
+-- from and there is nothing below the innermost one to have made it.
+-- Shared by both styles -- the old siteFormat and nameFormat agreed
+-- exactly on this case.
+calleeName :: IsString s => Call -> [s]
+calleeName c = [fromString (callee_ c)]
+
+-- | The output `AppraisalBase.AS3Page:vpDiv:290:3` refers to a
+-- function call at line 290 column 3 of `AppraisalBase.AS3Page`,
+-- inside the function `vpDiv`.  In the original call stack, `vpDiv`
+-- would have appeared in the frame following the one containing that
+-- location, and that frame would contain the function name `div_`;
+-- 'calls' has already done that shift, so it is just caller_ here.
+siteFormat :: IsString s => Call -> [s]
+siteFormat c =
   [fromString (srcLocModule site <> ":" <>
-               name <> ":" <>
+               maybe "???" id (caller_ c) <> ":" <>
                show (srcLocStartLine site) <> ":" <>
                show (srcLocStartCol site))]
-siteFormat Nothing (Just name) =
-  [fromString name]
-siteFormat (Just site) Nothing =
-  [fromString (srcLocModule site <> ":" <>
-               "???" <> ":" <>
-               show (srcLocStartLine site) <> ":" <>
-               show (srcLocStartCol site))]
-siteFormat Nothing Nothing =
-  []
+  where site = site_ c
 
 -- | siteFormat without the function name.
 _topFormat :: IsString s => SrcLoc -> s
@@ -140,11 +177,9 @@ _topFormat site =
               show (srcLocStartLine site) <> ":" <>
               show (srcLocStartCol site))
 
-nameFormat :: IsString s => Maybe SrcLoc -> Maybe String -> [s]
-nameFormat (Just site) (Just name) = [fromString (srcLocModule site <> ":" <> name)]
-nameFormat Nothing (Just name) = [fromString name]
-nameFormat (Just site) Nothing = [fromString (srcLocModule site <> ":???")]
-nameFormat Nothing Nothing = []
+-- | 'siteFormat' without the line and column.
+nameFormat :: IsString s => Call -> [s]
+nameFormat c = [fromString (srcLocModule (site_ c) <> ":" <> maybe "???" id (caller_ c))]
 
 mintercalate :: Monoid s => s -> [s] -> s
 mintercalate x xs = mconcat (intersperse x xs)
@@ -186,8 +221,8 @@ dropModuleFrames :: [Call] -> [Call]
 dropModuleFrames [] = []
 dropModuleFrames (frame1 : frames) =
   dropWhile (\frame ->
-               srcLocPackage (snd frame) == srcLocPackage (snd frame1) &&
-               srcLocModule (snd frame) == srcLocModule (snd frame1)) frames
+               srcLocPackage (site_ frame) == srcLocPackage (site_ frame1) &&
+               srcLocModule (site_ frame) == srcLocModule (site_ frame1)) frames
 
 -- | Drop the first element of a call stack and all subsequent frames
 -- from the same package.  Don't use this in the interpeter, the
@@ -196,7 +231,7 @@ dropPackageFrames :: [Call] -> [Call]
 dropPackageFrames [] = []
 dropPackageFrames (frame1 : frames) =
   dropWhile (\frame ->
-               srcLocPackage (snd frame) == srcLocPackage (snd frame1)) frames
+               srcLocPackage (site_ frame) == srcLocPackage (site_ frame1)) frames
 
 -- | Stack with main last.  Bottom frame includes the function name.
 -- Top frame includes the column number.
@@ -206,10 +241,10 @@ compactStack = mconcat . intersperse (" < " :: s) . compactLocs
 
 compactLocs :: forall s. (IsString s, Monoid s) => [Call] -> [s]
 compactLocs [] = ["(no CallStack)"]
-compactLocs [(callee, l)] = [fromString callee, srcloccol l]
-compactLocs [(_, l), (caller, _)] = [srcloccol l <> "." <> fromString caller]
-compactLocs ((_, l) : more@((caller, _) : _)) =
-  srcfunloc l (fromString caller) : stacktail (fmap snd more)
+compactLocs [Call callee l _] = [fromString callee, srcloccol l]
+compactLocs [Call _ l _, (Call caller _ _)] = [srcloccol l <> "." <> fromString caller]
+compactLocs (Call _ l _ : more@((Call caller _ _) : _)) =
+  srcfunloc l (fromString caller) : stacktail (fmap site_ more)
   where
     stacktail :: [SrcLoc] -> [s]
     stacktail [] = []
@@ -225,9 +260,8 @@ compactStackWith f locs = compactStack ((f . drop 1) locs)
 parentFunc :: HasCallStack => String -> String
 parentFunc child =
   case (getStack Fn.&
-        dropWhile ((/= child) . fst) Fn.&
-        drop 1) of
-    ((x@(_ : _), _) : _) -> x
+        dropWhile ((/= child) . callee_)) of
+    (Call _ _ (Just caller) : _) -> caller
     _ -> show getStack
 
 -- | This function creates a value which uniquely identifies the
@@ -236,7 +270,7 @@ parentFunc child =
 -- anywhere the function is called but instead getting the same key
 -- everywhere.
 loc :: HasCallStack => SrcLoc
-loc = scrubLoc (snd here)
+loc = scrubLoc (site_ here)
 
 here :: HasCallStack => Call
 here = head $ dropModuleFrames getStack
@@ -254,7 +288,7 @@ scrubLoc l = l {srcLocPackage = "", srcLocFile = ""}
 -- "thisFunction".
 {-# DEPRECATED thisFunction "callFn  -- callFn includes the module name" #-}
 thisFunction :: (HasCallStack, IsString s) => s
-thisFunction = maybe "???" (fromString . fst . fst) $ List.uncons $ tail $ dropModuleFrames getStack
+thisFunction = maybe "???" (fromString . callee_ . fst) $ List.uncons $ tail $ dropModuleFrames getStack
 
 -- [("getStack",
 --   SrcLoc {srcLocPackage = "interactive-session", srcLocModule = "Extra.SrcLoc",
@@ -273,6 +307,7 @@ thisFunction = maybe "???" (fromString . fst . fst) $ List.uncons $ tail $ dropM
 --           srcLocFile = "<interactive>",
 --           srcLocStartLine = 7, srcLocStartCol = 1, srcLocEndLine = 7, srcLocEndCol = 5})]
 
+{-
 test :: HasCallStack => IO ()
 test = caller
 
@@ -281,3 +316,4 @@ caller = called
 
 called :: HasCallStack => IO ()
 called = putStrLn (show getStack)
+-}
