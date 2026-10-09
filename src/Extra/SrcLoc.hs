@@ -86,38 +86,10 @@ srcloc l = fromString (srcLocModule l) <> ":" <> fromString (show (srcLocStartLi
 srcloccol :: (IsString s, Semigroup s) => SrcLoc -> s
 srcloccol l = srcloc l <> ":" <> fromString (show (srcLocStartCol l))
 
--- | Format the call stack elements.  In each pair, the function name
--- is what is being called at the call site.  Therefore, the function
--- we are calling from is the name in the previous pair.  That is why
--- we are formatting the locations using the function name from the
--- current pair and the source location from the previous pair.
-stackInternal ::
-  forall s. HasCallStack
-  => (Call -> [s])
-     -- ^ Renders the innermost frame's callee.  That frame is the one
-     -- thing a stack holds with no site of its own -- the name of what
-     -- was called, with nowhere to say it was called from.
-  -> (Call -> [s])
-     -- ^ Renders one frame: the site, and the function containing it.
-  -> ([s] -> [s])
-  -> [s]
-stackInternal doCallee doSite f =
-  f (format getStack)
-  where
-    -- Each Call carries the function its site sits inside, so a frame
-    -- renders from itself alone and the traversal is a plain fold.
-    -- 'calls' establishes that caller_ is a Just exactly when there is
-    -- a following element, so the outermost frame comes out with no
-    -- caller name without needing a case of its own.  concatMap rather
-    -- than fmap because the renderers return lists.
-    format :: [Call] -> [s]
-    format [] = []
-    format cs@(c : _) = doCallee c <> concatMap doSite cs
-
-internalDrop = drop 4
+internalDrop = drop 3
 
 callLocsWithInternal :: (IsString s, Monoid s, HasCallStack) => ([s] -> [s]) -> s
-callLocsWithInternal f = stackFormat (stackInternal calleeName siteFormat f)
+callLocsWithInternal f = stackFormat (f (concatMap siteFormat getStack))
 
 callLocsWith :: (IsString s, Monoid s, HasCallStack) => ([s] -> [s]) -> s
 callLocsWith f = callLocsWithInternal (f . internalDrop)
@@ -130,7 +102,7 @@ callLocs = callLocsWithInternal (internalDrop)
 
 -- | Function names only, no line numbers
 callFnsWithInternal :: (IsString s, Monoid s, HasCallStack) => ([s] -> [s]) -> s
-callFnsWithInternal f = stackFormat (stackInternal calleeName nameFormat f)
+callFnsWithInternal f = stackFormat (f (concatMap nameFormat getStack))
 
 stackFormat :: (IsString a, Monoid a, HasCallStack) => [a] -> a
 stackFormat [] = "No call stack"
@@ -147,14 +119,6 @@ callFn = callFnsWithInternal (take 1 . internalDrop)
 
 callFns :: HasCallStack => String
 callFns = callFnsWithInternal (internalDrop)
-
--- | The innermost frame of a stack: the name of the function being
--- called, with no site, because a stack says where each call was made
--- from and there is nothing below the innermost one to have made it.
--- Shared by both styles -- the old siteFormat and nameFormat agreed
--- exactly on this case.
-calleeName :: IsString s => Call -> [s]
-calleeName c = [fromString (callee_ c)]
 
 -- | The output `AppraisalBase.AS3Page:vpDiv:290:3` refers to a
 -- function call at line 290 column 3 of `AppraisalBase.AS3Page`,
