@@ -86,39 +86,18 @@ srcloc l = fromString (srcLocModule l) <> ":" <> fromString (show (srcLocStartLi
 srcloccol :: (IsString s, Semigroup s) => SrcLoc -> s
 srcloccol l = srcloc l <> ":" <> fromString (show (srcLocStartCol l))
 
-internalDrop = drop 3
-
-callLocsWithInternal :: (IsString s, Monoid s, HasCallStack) => ([s] -> [s]) -> s
-callLocsWithInternal f = stackFormat (f (concatMap siteFormat getStack))
-
-callLocsWith :: (IsString s, Monoid s, HasCallStack) => ([s] -> [s]) -> s
-callLocsWith f = callLocsWithInternal (f . internalDrop)
+callLocsWith :: (IsString s, Monoid s, HasCallStack) => ([Call] -> [Call]) -> s
+callLocsWith f = renderStackWith siteStack (f . internalDrop)
 
 callLoc :: (IsString s, Monoid s, HasCallStack) => s
-callLoc = callLocsWithInternal (take 1 . internalDrop)
+callLoc = renderStackWith siteStack (take 1 . internalDrop)
 
 callLocs :: (IsString s, Monoid s, HasCallStack) => s
-callLocs = callLocsWithInternal (internalDrop)
+callLocs = renderStackWith siteStack internalDrop
 
--- | Function names only, no line numbers
-callFnsWithInternal :: (IsString s, Monoid s, HasCallStack) => ([s] -> [s]) -> s
-callFnsWithInternal f = stackFormat (f (concatMap nameFormat getStack))
-
-stackFormat :: (IsString a, Monoid a, HasCallStack) => [a] -> a
-stackFormat [] = "No call stack"
-stackFormat xs = mintercalate " <" xs
-
-callFnsWith :: (IsString s, Monoid s, HasCallStack) => ([s] -> [s]) -> s
-callFnsWith f = callFnsWithInternal (f . internalDrop)
-
--- | This depends on the exact calling structure that results in the
--- caller being three positions down the stack: `callFn ->
--- callFnsWithInternal -> getStack`.
-callFn :: (IsString s, Monoid s, HasCallStack) => s
-callFn = callFnsWithInternal (take 1 . internalDrop)
-
-callFns :: HasCallStack => String
-callFns = callFnsWithInternal (internalDrop)
+-- | Function names and line/column numbers
+siteStack :: forall s. (IsString s, Monoid s, HasCallStack) => [Call] -> s
+siteStack = stackFormat . concatMap siteFormat
 
 -- | The output `AppraisalBase.AS3Page:vpDiv:290:3` refers to a
 -- function call at line 290 column 3 of `AppraisalBase.AS3Page`,
@@ -133,6 +112,28 @@ siteFormat c =
                show (srcLocStartLine site) <> ":" <>
                show (srcLocStartCol site))]
   where site = site_ c
+
+callFnsWith :: (IsString s, Monoid s, HasCallStack) => ([Call] -> [Call]) -> s
+callFnsWith f = renderStackWith nameStack (f . internalDrop)
+
+callFn :: (IsString s, Monoid s, HasCallStack) => s
+callFn = renderStackWith nameStack (take 1 . internalDrop)
+
+callFns :: HasCallStack => String
+callFns = renderStackWith nameStack internalDrop
+
+internalDrop = drop 2
+
+-- | Function names only, no line numbers
+nameStack :: forall s. (IsString s, Monoid s, HasCallStack) => [Call] -> s
+nameStack = stackFormat . concatMap nameFormat
+
+renderStackWith :: HasCallStack => ([Call] -> s) -> ([Call] -> [Call]) -> s
+renderStackWith render f = render $ f getStack
+
+stackFormat :: (IsString a, Monoid a, HasCallStack) => [a] -> a
+stackFormat [] = "No call stack"
+stackFormat xs = mintercalate " <" xs
 
 -- | siteFormat without the function name.
 _topFormat :: IsString s => SrcLoc -> s
