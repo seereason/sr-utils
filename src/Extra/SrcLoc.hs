@@ -2,20 +2,38 @@
 
 module Extra.SrcLoc
   ( getStack
-  , srcloc
-  , srcloccol
 
   , Call(..)
   , calls
+  , sites
+
+    -- * Stack renderers
+  , stack
+  , stackFull
+  , site
+
+    -- * Stack formatters
+  , siteStack
+  , funStack
+  , nameStack
+
+    -- * Convenience
   , callLocsWith
   , callLoc
   , callLocs
+
   , callFnsWith
   , callFn
   , callFns
 
-    -- From sr-log:SeeReason.Log
-  -- , loc
+  , callNamesWith
+  , callName
+  , callNames
+
+    -- Old stuff
+  , srcloc
+  , srcloccol
+
   , srcfunloc
   , srclocs
   , putStrLnLoc
@@ -41,9 +59,7 @@ import Data.List as List (intersperse, uncons)
 import Data.String (IsString(fromString))
 import GHC.Generics (Generic)
 import GHC.Stack (callStack, CallStack, getCallStack, HasCallStack, SrcLoc(..))
-
--- From sr-log SeeReason.SrcLoc
-
+
 -- | This pair contains the name of a called function and location
 -- in the source code from which that call occurs.  If you have a
 -- stack of these, the second element will be the caller of the
@@ -71,6 +87,10 @@ calls stack =
     go (callee, site) (next@(caller, _) : more) =
       Call callee site (Just caller) : go next more
 
+-- | Inverse of 'calls'
+sites :: [Call] -> [(String, SrcLoc)]
+sites = fmap (\Call{..} -> (callee_, site_))
+
 -- | The first element of the result of `getStack` will be the call
 -- to 'getStack' itself, and location from which it was called.  The
 -- next element will be the name of the function that called
@@ -78,26 +98,33 @@ calls stack =
 getStack :: HasCallStack => [Call]
 getStack = calls (getCallStack callStack)
 
--- | Compactly format a source location with starting line number
-srcloc :: (IsString s, Semigroup s) => SrcLoc -> s
-srcloc l = fromString (srcLocModule l) <> ":" <> fromString (show (srcLocStartLine l))
+-- | This is the basic stack formatting function.
+stack :: (IsString s, Monoid s, HasCallStack) => ([Call] -> [Call]) -> ([Call] -> s) -> s
+stack f render = render $ (f . internalDrop) getStack
 
--- | Compactly format a source location with starting line number and column
-srcloccol :: (IsString s, Semigroup s) => SrcLoc -> s
-srcloccol l = srcloc l <> ":" <> fromString (show (srcLocStartCol l))
+-- | This is the basic stack formatting function.
+stackFull :: (IsString s, Monoid s, HasCallStack) => ([Call] -> s) -> s
+stackFull render = render $ internalDrop getStack
 
-callLocsWith :: (IsString s, Monoid s, HasCallStack) => ([Call] -> [Call]) -> s
-callLocsWith f = renderStackWith siteStack (f . internalDrop)
+-- | This is the basic stack formatting function.
+site :: (IsString s, Monoid s, HasCallStack) => ([Call] -> s) -> s
+site render = render $ (take 1 . internalDrop) getStack
 
-callLoc :: (IsString s, Monoid s, HasCallStack) => s
-callLoc = renderStackWith siteStack (take 1 . internalDrop)
+-- renderStackWith :: HasCallStack => ([Call] -> s) -> ([Call] -> [Call]) -> s
+-- renderStackWith render f = render $ f getStack
 
-callLocs :: (IsString s, Monoid s, HasCallStack) => s
-callLocs = renderStackWith siteStack internalDrop
+stackConcat :: (IsString a, Monoid a, HasCallStack) => [a] -> a
+stackConcat [] = "No call stack"
+stackConcat xs = mintercalate " <" xs
 
+internalDrop = dropModuleFrames -- drop 2
+
+mintercalate :: Monoid s => s -> [s] -> s
+mintercalate x xs = mconcat (intersperse x xs)
+
 -- | Function names and line/column numbers
 siteStack :: forall s. (IsString s, Monoid s, HasCallStack) => [Call] -> s
-siteStack = stackFormat . concatMap siteFormat
+siteStack = stackConcat . concatMap siteFormat
 
 -- | The output `AppraisalBase.AS3Page:vpDiv:290:3` refers to a
 -- function call at line 290 column 3 of `AppraisalBase.AS3Page`,
@@ -113,41 +140,58 @@ siteFormat c =
                show (srcLocStartCol site))]
   where site = site_ c
 
-callFnsWith :: (IsString s, Monoid s, HasCallStack) => ([Call] -> [Call]) -> s
-callFnsWith f = renderStackWith nameStack (f . internalDrop)
-
-callFn :: (IsString s, Monoid s, HasCallStack) => s
-callFn = renderStackWith nameStack (take 1 . internalDrop)
-
-callFns :: HasCallStack => String
-callFns = renderStackWith nameStack internalDrop
-
-internalDrop = drop 2
-
 -- | Function names only, no line numbers
-nameStack :: forall s. (IsString s, Monoid s, HasCallStack) => [Call] -> s
-nameStack = stackFormat . concatMap nameFormat
+funStack :: forall s. (IsString s, Monoid s, HasCallStack) => [Call] -> s
+funStack = stackConcat . concatMap funFormat
 
-renderStackWith :: HasCallStack => ([Call] -> s) -> ([Call] -> [Call]) -> s
-renderStackWith render f = render $ f getStack
-
-stackFormat :: (IsString a, Monoid a, HasCallStack) => [a] -> a
-stackFormat [] = "No call stack"
-stackFormat xs = mintercalate " <" xs
-
--- | siteFormat without the function name.
-_topFormat :: IsString s => SrcLoc -> s
-_topFormat site =
-  fromString (srcLocModule site <> ":" <>
-              show (srcLocStartLine site) <> ":" <>
-              show (srcLocStartCol site))
+-- | 'siteFormat' without the line and column.
+funFormat :: IsString s => Call -> [s]
+funFormat c = [fromString (srcLocModule (site_ c) <> ":" <> maybe "???" id (caller_ c))]
 
 -- | 'siteFormat' without the line and column.
 nameFormat :: IsString s => Call -> [s]
-nameFormat c = [fromString (srcLocModule (site_ c) <> ":" <> maybe "???" id (caller_ c))]
+nameFormat c = [fromString (maybe "???" id (caller_ c))]
 
-mintercalate :: Monoid s => s -> [s] -> s
-mintercalate x xs = mconcat (intersperse x xs)
+-- | Function names only, no line numbers
+nameStack :: forall s. (IsString s, Monoid s, HasCallStack) => [Call] -> s
+nameStack = stackConcat . concatMap nameFormat
+
+-- These could be inlined
+
+callLocsWith :: (IsString s, Monoid s, HasCallStack) => ([Call] -> [Call]) -> s
+callLocsWith f = stack f siteStack
+
+callLoc :: (IsString s, Monoid s, HasCallStack) => s
+callLoc = site siteStack
+
+callLocs :: (IsString s, Monoid s, HasCallStack) => s
+callLocs = stackFull siteStack
+
+callFnsWith :: (IsString s, Monoid s, HasCallStack) => ([Call] -> [Call]) -> s
+callFnsWith f = stack f funStack
+
+callFn :: (IsString s, Monoid s, HasCallStack) => s
+callFn = site funStack
+
+callFns :: HasCallStack => String
+callFns = stackFull funStack
+
+callNamesWith :: (IsString s, Monoid s, HasCallStack) => ([Call] -> [Call]) -> s
+callNamesWith f = stack f nameStack
+
+callName :: (IsString s, Monoid s, HasCallStack) => s
+callName = site nameStack
+
+callNames :: HasCallStack => String
+callNames = stackFull nameStack
+
+-- | Compactly format a source location with starting line number
+srcloc :: (IsString s, Semigroup s) => SrcLoc -> s
+srcloc l = fromString (srcLocModule l) <> ":" <> fromString (show (srcLocStartLine l))
+
+-- | Compactly format a source location with starting line number and column
+srcloccol :: (IsString s, Semigroup s) => SrcLoc -> s
+srcloccol l = srcloc l <> ":" <> fromString (show (srcLocStartCol l))
 
 -- * From SeeReason.Log
 
